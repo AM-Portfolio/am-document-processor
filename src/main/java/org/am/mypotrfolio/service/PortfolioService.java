@@ -1,11 +1,14 @@
 package org.am.mypotrfolio.service;
 
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.web.multipart.MultipartFile;
 
-import com.am.common.amcommondata.model.PortfolioModel;
+import com.am.common.amcommondata.model.asset.AssetModel;
 
 public interface PortfolioService {
 
-    PortfolioModel processPortfolioFile(MultipartFile fileName);
+    Set<AssetModel> processPortfolioFile(MultipartFile fileName, UUID processId);
     
 }

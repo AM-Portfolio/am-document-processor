@@ -1,6 +1,5 @@
 package org.am.mypotrfolio.utils;
 
-import com.azure.json.implementation.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -62,9 +61,8 @@ public class ObjectUtils {
         }
         return "";
     }
-    // public static <T> String writeObject(T t) throws JsonProcessingException {
-    //     return unescapeJava(objectWriter.forType(t.getClass()).writeValueAsString(t)).replaceAll("^\"|\"$", "");
-    // }
+
+
 
     public static <T> Optional<T> readObject(Class<T> object, String payload) {
         try {
@@ -74,6 +72,15 @@ public class ObjectUtils {
             return Optional.empty();
         }
     }
+
+    public static <T> String convertToJson(T object) {
+        try {
+            return objectWriter.forType(object.getClass()).writeValueAsString(object);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting object to JSON", e);
+        }
+    }
+
 
     public static <T> Mono<T> read(Class<T> object, String payload) {
         return Mono.defer(() -> readObject(object, payload)

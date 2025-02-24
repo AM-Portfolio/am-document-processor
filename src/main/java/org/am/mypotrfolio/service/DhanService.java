@@ -16,7 +16,6 @@ import org.am.mypotrfolio.processor.FileProcessorFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -29,28 +28,30 @@ public class DhanService implements PortfolioService {
 
     @Override
     @SneakyThrows
-    public PortfolioModel processPortfolioFile(MultipartFile file) {
-        log.info("Starting to process portfolio file: {}", file.getOriginalFilename());
+    @SuppressWarnings("rawtypes")
+    public Set<AssetModel> processPortfolioFile(MultipartFile file, UUID processId) {
+        log.info("[ProcessId: {}] Starting to process portfolio file: {}", processId, file.getOriginalFilename());
         try {
             // Process the file using appropriate processor
-            log.debug("Getting file processor for file type");
+            log.debug("[ProcessId: {}] Getting file processor for file type", processId);
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
                     .processFile(file, "Dhan");
-            log.debug("Successfully processed file data, converting to DhanStockPortfolio objects");
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to DhanStockPortfolio objects", processId);
 
             // Convert the data to DhanStockPortfolio objects
             String payload = objectMapper.writeValueAsString(fileData);
             List<DhanStockPortfolio> stocks = objectMapper.readValue(payload, 
                     new TypeReference<List<DhanStockPortfolio>>() {});
-            log.info("Converted {} stocks from file", stocks.size());
+            log.info("[ProcessId: {}] Converted {} stocks from file", processId, stocks.size());
 
             // Create portfolio assets with NSE security information
             Set<AssetModel> portfolioAssets = new HashSet<>();
             for (DhanStockPortfolio stock : stocks) {
-                log.debug("Processing stock: {}", stock.getName());
+                log.debug("[ProcessId: {}] Processing stock: {}", processId, stock.getName());
                 // Try to find NSE security by name or other identifiers
                 Optional<NseSecurity> nseSecurity = nseSecurityRepository.findBestMatchBySearchParam(stock.getName());
             
+                
                 AssetModel.AssetModelBuilder assetBuilder = AssetModel.builder()
                         .assetType(AssetType.EQUITY)
                         .avgBuyingPrice(getDouble(stock.getAvgPrice()))
@@ -62,7 +63,7 @@ public class DhanService implements PortfolioService {
                 // Enhance asset with NSE security information if available
                 if (nseSecurity.isPresent()) {
                     NseSecurity security = nseSecurity.get();
-                    log.debug("Found NSE security information for: {}", stock.getName());
+                    log.debug("[ProcessId: {}] Found NSE security information for: {}", processId, stock.getName());
                     assetBuilder.isin(security.getIsin());
                     assetBuilder.symbol(security.getSecurityId());
                     assetBuilder.name(security.getSecurityName());
@@ -71,14 +72,11 @@ public class DhanService implements PortfolioService {
                 portfolioAssets.add(assetBuilder.build());
             }
 
-            log.info("Successfully created portfolio with {} assets", portfolioAssets.size());
+            log.info("[ProcessId: {}] Successfully created portfolio with {} assets", processId, portfolioAssets.size());
             // Create and return portfolio model
-            return PortfolioModel.builder()
-                    .assets(portfolioAssets)
-                    .createdAt(LocalDateTime.now())
-                    .build();
+            return portfolioAssets;
         } catch (Exception e) {
-            log.error("Error processing portfolio file: {}", e.getMessage(), e);
+            log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
             throw e;
         }
     }
