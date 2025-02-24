@@ -17,6 +17,6 @@ import lombok.NoArgsConstructor;
 public class PortfolioUpdateEvent {
     private UUID id;
     private String userId;
-    private Set<AssetModel> portfolio;
+    private Set<AssetModel> assets;
     private long timestamp;
 }

@@ -1,9 +1,8 @@
 package org.am.mypotrfolio.service;
 
-import com.am.common.amcommondata.domain.enums.AssetType;
-import com.am.common.amcommondata.domain.enums.BrokerType;
-import com.am.common.amcommondata.model.PortfolioModel;
 import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.enums.AssetType;
+import com.am.common.amcommondata.model.enums.BrokerType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -18,12 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 public class MessagingEventService {
     private final KafkaProducerService kafkaProducerService;
 
-    public void sendMessage(Set<AssetModel> portfolio, UUID processId) {
+    public void sendMessage(Set<AssetModel> assetModels, UUID processId) {
         log.info("[ProcessId: {}] Preparing to send portfolio update event", processId);
         PortfolioUpdateEvent portfolioUpdateEvent = PortfolioUpdateEvent.builder()
                 .id(processId)
                 .userId("MKU257")
-                .portfolio(portfolio)
+                .assets(assetModels)
                 .timestamp(System.currentTimeMillis())
                 .build();
         

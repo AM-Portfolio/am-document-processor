@@ -2,6 +2,8 @@ package org.am.mypotrfolio.processor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
@@ -30,20 +32,20 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
 
     @Override
     protected List<Map<String, String>> parseMStockFile(MultipartFile file) throws Exception {
-        return parseExcelFile(file, 0, 0);
+        return parseExcelFile(file, 0, 0, 0);
     }
 
     @Override
     protected List<Map<String, String>> parseZerodhaFile(MultipartFile file) throws Exception {
-        return parseExcelFile(file, 22, 22);
+        return parseExcelFile(file, 22, 22 , 1);
     }
 
     @Override
     protected List<Map<String, String>> parseDhanFile(MultipartFile file) throws Exception {
-        return parseExcelFile(file, 0, 0);
+        return parseExcelFile(file, 0, 0 , 0);
     }
 
-    private List<Map<String, String>> parseExcelFile(MultipartFile file, int headerRow, int skipRows) throws Exception {
+    private List<Map<String, String>> parseExcelFile(MultipartFile file, int headerRow, int skipRows, int skipColumns) throws Exception {
         List<Map<String, String>> jsonList = new ArrayList<>();
 
         try (InputStream inputStream = file.getInputStream();
@@ -75,11 +77,11 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
 
                 if (headers.isEmpty()) continue;
 
-                String[] values = new String[headers.size()];
+                String[] values = new String[headers.size()-skipColumns];
                 for (Cell cell : row) {
                     cell.setCellType(CellType.STRING);
                     if (cell.getColumnIndex() < headers.size()) {
-                        values[cell.getColumnIndex()] = cell.getStringCellValue();
+                        values[cell.getColumnIndex()-skipColumns] = cell.getStringCellValue();
                     }
                 }
 

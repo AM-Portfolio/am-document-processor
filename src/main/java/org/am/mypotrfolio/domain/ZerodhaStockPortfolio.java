@@ -19,7 +19,7 @@ public class ZerodhaStockPortfolio {
     private String sector;
     
     @JsonProperty("Quantity Available")
-    private int quantityAvailable;
+    private Double quantity;
     
     @JsonProperty("Quantity Discrepant")
     private int quantityDiscrepant;
@@ -34,7 +34,7 @@ public class ZerodhaStockPortfolio {
     private int quantityPledgedLoan;
     
     @JsonProperty("Average Price")
-    private double averagePrice;
+    private String averagePrice;
     
     @JsonProperty("Previous Closing Price")
     private double previousClosingPrice;
