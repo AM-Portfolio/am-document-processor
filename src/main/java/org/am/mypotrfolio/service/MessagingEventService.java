@@ -8,6 +8,7 @@ import org.am.mypotrfolio.kafka.producer.KafkaProducerService;
 import org.springframework.stereotype.Service;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.enums.BrokerType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 public class MessagingEventService {
     private final KafkaProducerService kafkaProducerService;
 
-    public void sendMessage(Set<AssetModel> assetModels, UUID processId) {
+    public void sendMessage(Set<AssetModel> assetModels, UUID processId, BrokerType brokerType) {
         log.info("[ProcessId: {}] Preparing to send portfolio update event", processId);
         PortfolioUpdateEvent portfolioUpdateEvent = PortfolioUpdateEvent.builder()
                 .id(processId)
                 .userId("MKU257")
                 .assets(assetModels)
+                .brokerType(brokerType)
                 .timestamp(System.currentTimeMillis())
                 .build();
         

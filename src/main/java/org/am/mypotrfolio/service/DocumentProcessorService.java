@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.am.common.amcommondata.model.enums.BrokerType;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,14 +33,14 @@ public class DocumentProcessorService {
             if (documentType.equals("BROKER_PORTFOLIO")) {
                 // Extract broker type from file name or content
                 log.debug("[ProcessId: {}] Detecting broker type from file", processId);
-                String brokerType = detectBrokerType(file);
+                BrokerType brokerType = detectBrokerType(file);
                 log.info("[ProcessId: {}] Detected broker type: {}", processId, brokerType);
                 
                 var processor = brokerProcessorFactory.getProcessor(brokerType);
                 
                 processStatusMap.put(processId, ProcessingStatus.PROCESSING);
                 log.info("[ProcessId: {}] Processing document with {} processor", processId, brokerType);
-                DocumentProcessResponse response = processor.processDocument(file, processId);
+                DocumentProcessResponse response = processor.processDocument(file, processId, brokerType);
                 response.setProcessId(processId);
                 response.setStatus(ProcessingStatus.COMPLETED);
                 processStatusMap.put(processId, ProcessingStatus.COMPLETED);
@@ -87,15 +89,15 @@ public class DocumentProcessorService {
         return types;
     }
 
-    private String detectBrokerType(MultipartFile file) {
+    private BrokerType detectBrokerType(MultipartFile file) {
         String filename = file.getOriginalFilename().toUpperCase();
         if (filename.contains("DHAN")) {
-            return "DHAN";
+            return BrokerType.DHAN;
         } else if (filename.contains("ZERODHA")) {
-            return "ZERODHA";
+            return BrokerType.ZERODHA;
         }
         else if (filename.contains("MSTOCK")) {
-            return "MSTOCK";
+            return BrokerType.MSTOCK;
         }
         throw new IllegalArgumentException("Unable to detect broker type from file: " + filename);
     }
