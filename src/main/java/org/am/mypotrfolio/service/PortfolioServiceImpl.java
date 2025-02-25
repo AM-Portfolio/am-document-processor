@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 // Project imports
 import org.am.mypotrfolio.domain.ZerodhaStockPortfolio;
+import org.am.mypotrfolio.domain.common.StockPortfolio;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
@@ -30,9 +31,9 @@ import java.util.UUID;
 import java.util.Optional;
 
 @Slf4j
-@Service("Zerodha")
+@Service
 @RequiredArgsConstructor
-public class ZerodhaService implements PortfolioService {
+public class PortfolioServiceImpl implements PortfolioService {
     private final FileProcessorFactory fileProcessorFactory;
     private final NseSecurityRepository nseSecurityRepository;
     private final ObjectMapper objectMapper;
@@ -40,50 +41,62 @@ public class ZerodhaService implements PortfolioService {
     @Override
     @SneakyThrows
     @SuppressWarnings("rawtypes")
-    public Set<AssetModel> processPortfolioFile(MultipartFile file, UUID processId) {
+    public Set<AssetModel> processPortfolioFile(MultipartFile file, UUID processId, BrokerType brokerType) {
         log.info("[ProcessId: {}] Starting to process portfolio file: {}", processId, file.getOriginalFilename());
         try {
             // Process the file using appropriate processor
             log.debug("[ProcessId: {}] Getting file processor for file type", processId);
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
-                    .processFile(file, "Zerodha");
-            log.debug("[ProcessId: {}] Successfully processed file data, converting to ZerodhaStockPortfolio objects", processId);
+                    .processFile(file, brokerType);
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to ZerodhaStockPortfolio objects",
+                    processId);
 
-            // Convert the data to ZerodhaStockPortfolio objects
+            // Convert the data to StockPortfolio objects
             String payload = objectMapper.writeValueAsString(fileData);
-            List<ZerodhaStockPortfolio> stocks = objectMapper.readValue(payload, 
-                    new TypeReference<List<ZerodhaStockPortfolio>>() {});
+            List<StockPortfolio> stocks = objectMapper.readValue(payload,
+                    new TypeReference<List<StockPortfolio>>() {
+                    });
             log.info("[ProcessId: {}] Converted {} stocks from file", processId, stocks.size());
 
             // Create portfolio assets with NSE security information
             Set<AssetModel> portfolioAssets = new HashSet<>();
-            for (ZerodhaStockPortfolio stock : stocks) {
+            for (StockPortfolio stock : stocks) {
                 log.debug("[ProcessId: {}] Processing stock: {}", processId, stock.getSymbol());
                 // Try to find NSE security by name or other identifiers
-                Optional<NseSecurity> nseSecurity = nseSecurityRepository.findBestMatchBySearchParam(stock.getSymbol());
-            
-                
+                var quantity = Double.valueOf(stock.getQuantity());
+                var avgBuyingPrice = stock.getAvgPrice() != null ? getDouble(stock.getAvgPrice()) : 0.0;
+                var investedValue = stock.getInvestmentValue() != null ? getDouble(stock.getInvestmentValue())
+                        : quantity * avgBuyingPrice;
                 AssetModel.AssetModelBuilder assetBuilder = AssetModel.builder()
                         .assetType(AssetType.EQUITY)
-                        .avgBuyingPrice(getDouble(stock.getAveragePrice()))
-                        .quantity(stock.getQuantity())
-                        .investmentValue(getDouble(stock.getAveragePrice()) * stock.getQuantity())
-                        .name(stock.getSymbol())
+                        .isin(stock.getIsin())
+                        .symbol(stock.getSymbol())
+                        .avgBuyingPrice(avgBuyingPrice)
+                        .quantity(quantity)
+                        .investmentValue(investedValue)
+                        .name(stock.getName())
                         .buyingPlatform(BrokerType.ZERODHA.getCode());
 
-                // Enhance asset with NSE security information if available
-                if (nseSecurity.isPresent()) {
-                    NseSecurity security = nseSecurity.get();
-                    log.debug("[ProcessId: {}] Found NSE security information for: {}", processId, stock.getSymbol());
-                    assetBuilder.isin(security.getIsin());
-                    assetBuilder.symbol(security.getSecurityId());
-                    assetBuilder.name(security.getSecurityName());
+                if ((stock.getSymbol() == null || stock.getSymbol().isEmpty())
+                        || (stock.getIsin() == null || stock.getIsin().isEmpty())) {
+                    Optional<NseSecurity> nseSecurity = nseSecurityRepository
+                            .findBestMatchBySearchParam(stock.getName());
+                    // Enhance asset with NSE security information if available
+                    if (nseSecurity.isPresent()) {
+                        NseSecurity security = nseSecurity.get();
+                        log.debug("[ProcessId: {}] Found NSE security information for: {}", processId,
+                                stock.getSymbol());
+                        assetBuilder.isin(security.getIsin());
+                        assetBuilder.symbol(security.getSecurityId());
+                        assetBuilder.name(security.getSecurityName());
+                    }
                 }
 
                 portfolioAssets.add(assetBuilder.build());
             }
 
-            log.info("[ProcessId: {}] Successfully created portfolio with {} assets", processId, portfolioAssets.size());
+            log.info("[ProcessId: {}] Successfully created portfolio with {} assets", processId,
+                    portfolioAssets.size());
             // Create and return portfolio model
             return portfolioAssets;
         } catch (Exception e) {
