@@ -27,7 +27,7 @@ public class StockPortfolio {
 
     @JsonProperty("Quantity")
     @JsonAlias({"Quantity", "Quantity Available"})
-    private int quantity;
+    private String quantity;
 
     @JsonProperty("Average Price")
     @JsonAlias({"Avg. Cost", "Avg Price", "Average Price"})

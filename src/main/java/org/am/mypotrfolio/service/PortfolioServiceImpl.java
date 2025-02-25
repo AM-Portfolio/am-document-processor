@@ -1,46 +1,40 @@
 package org.am.mypotrfolio.service;
 
-// Lombok annotations
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-// Project imports
-import org.am.mypotrfolio.domain.ZerodhaStockPortfolio;
 import org.am.mypotrfolio.domain.common.StockPortfolio;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
-// Spring imports
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
 import com.am.common.amcommondata.model.enums.AssetType;
 import com.am.common.amcommondata.model.enums.BrokerType;
-// Jackson imports
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashSet;
-// Java core imports
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PortfolioServiceImpl implements PortfolioService {
     private final FileProcessorFactory fileProcessorFactory;
     private final NseSecurityRepository nseSecurityRepository;
     private final ObjectMapper objectMapper;
 
-    @Override
-    @SneakyThrows
     @SuppressWarnings("rawtypes")
+    @SneakyThrows
+    @Override
     public Set<AssetModel> processPortfolioFile(MultipartFile file, UUID processId, BrokerType brokerType) {
         log.info("[ProcessId: {}] Starting to process portfolio file: {}", processId, file.getOriginalFilename());
         try {
@@ -48,22 +42,19 @@ public class PortfolioServiceImpl implements PortfolioService {
             log.debug("[ProcessId: {}] Getting file processor for file type", processId);
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
                     .processFile(file, brokerType);
-            log.debug("[ProcessId: {}] Successfully processed file data, converting to ZerodhaStockPortfolio objects",
-                    processId);
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", processId);
 
             // Convert the data to StockPortfolio objects
             String payload = objectMapper.writeValueAsString(fileData);
-            List<StockPortfolio> stocks = objectMapper.readValue(payload,
-                    new TypeReference<List<StockPortfolio>>() {
-                    });
-            log.info("[ProcessId: {}] Converted {} stocks from file", processId, stocks.size());
+            List<StockPortfolio> portfolios = objectMapper.readValue(payload,
+                    new TypeReference<List<StockPortfolio>>() {});
 
-            // Create portfolio assets with NSE security information
+            // Convert to AssetModels
             Set<AssetModel> portfolioAssets = new HashSet<>();
-            for (StockPortfolio stock : stocks) {
+            for (StockPortfolio stock : portfolios) {
                 log.debug("[ProcessId: {}] Processing stock: {}", processId, stock.getSymbol());
                 // Try to find NSE security by name or other identifiers
-                var quantity = Double.valueOf(stock.getQuantity());
+                var quantity = getDouble(stock.getQuantity());
                 var avgBuyingPrice = stock.getAvgPrice() != null ? getDouble(stock.getAvgPrice()) : 0.0;
                 var investedValue = stock.getInvestmentValue() != null ? getDouble(stock.getInvestmentValue())
                         : quantity * avgBuyingPrice;
@@ -74,13 +65,11 @@ public class PortfolioServiceImpl implements PortfolioService {
                         .avgBuyingPrice(avgBuyingPrice)
                         .quantity(quantity)
                         .investmentValue(investedValue)
-                        .name(stock.getName())
-                        .buyingPlatform(BrokerType.ZERODHA.getCode());
+                        .name(stock.getName());
 
-                if ((stock.getSymbol() == null || stock.getSymbol().isEmpty())
-                        || (stock.getIsin() == null || stock.getIsin().isEmpty())) {
+                if (stock.getIsin() == null || stock.getIsin().isEmpty()) {
                     Optional<NseSecurity> nseSecurity = nseSecurityRepository
-                            .findBestMatchBySearchParam(stock.getName());
+                            .findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
                     // Enhance asset with NSE security information if available
                     if (nseSecurity.isPresent()) {
                         NseSecurity security = nseSecurity.get();
@@ -95,9 +84,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                 portfolioAssets.add(assetBuilder.build());
             }
 
-            log.info("[ProcessId: {}] Successfully created portfolio with {} assets", processId,
-                    portfolioAssets.size());
-            // Create and return portfolio model
+            log.info("[ProcessId: {}] Successfully processed {} portfolio entries", processId, portfolioAssets.size());
             return portfolioAssets;
         } catch (Exception e) {
             log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
