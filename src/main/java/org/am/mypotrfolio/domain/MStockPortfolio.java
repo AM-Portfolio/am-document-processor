@@ -14,7 +14,7 @@ public class MStockPortfolio {
     @JsonProperty("Quantity")
     private double quantity;
 
-    @JsonProperty("Avg Price")
+    @JsonProperty("Avg. Cost")
     private double avgPrice;
 
     @JsonProperty("LTP")

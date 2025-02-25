@@ -1,6 +1,5 @@
 package org.am.mypotrfolio.controller;
 
-import org.am.mypotrfolio.model.DocumentProcessRequest;
 import org.am.mypotrfolio.model.DocumentProcessResponse;
 import org.am.mypotrfolio.model.ProcessingStatus;
 import org.am.mypotrfolio.service.DocumentProcessorService;

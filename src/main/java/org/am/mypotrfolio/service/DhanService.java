@@ -79,8 +79,4 @@ public class DhanService implements PortfolioService {
             throw e;
         }
     }
-
-    private Double getDouble(String value) {
-        return Double.parseDouble(value.replaceAll(",", ""));
-    }
 }

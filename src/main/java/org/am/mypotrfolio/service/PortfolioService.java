@@ -11,4 +11,7 @@ public interface PortfolioService {
 
     Set<AssetModel> processPortfolioFile(MultipartFile fileName, UUID processId);
     
+    default Double getDouble(String value) {
+        return Double.parseDouble(value.replaceAll(",", ""));
+    }
 }

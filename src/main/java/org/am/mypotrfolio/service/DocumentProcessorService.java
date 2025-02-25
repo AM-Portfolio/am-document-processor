@@ -88,20 +88,20 @@ public class DocumentProcessorService {
     }
 
     private String detectBrokerType(MultipartFile file) {
-        // TODO: Implement broker detection logic based on file content or name
-        // For now, we'll assume it's in the filename: e.g., "dhan_portfolio.pdf"
         String filename = file.getOriginalFilename().toUpperCase();
         if (filename.contains("DHAN")) {
             return "DHAN";
         } else if (filename.contains("ZERODHA")) {
             return "ZERODHA";
         }
+        else if (filename.contains("MSTOCK")) {
+            return "MSTOCK";
+        }
         throw new IllegalArgumentException("Unable to detect broker type from file: " + filename);
     }
 
     private DocumentProcessResponse processOtherDocumentTypes(UUID processId, MultipartFile file, String documentType) {
         log.info("[ProcessId: {}] Processing other document type: {}", processId, documentType);
-        // TODO: Implement processing logic for other document types
         DocumentProcessResponse response = new DocumentProcessResponse();
         response.setProcessId(processId);
         response.setDocumentType(documentType);
