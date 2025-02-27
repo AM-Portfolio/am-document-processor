@@ -1,8 +1,10 @@
 package org.am.mypotrfolio.service;
 
+import org.am.mypotrfolio.domain.common.DocumentType;
+import org.am.mypotrfolio.domain.common.PortfolioRequest;
 import org.am.mypotrfolio.model.DocumentProcessResponse;
 import org.am.mypotrfolio.model.ProcessingStatus;
-import org.am.mypotrfolio.service.processor.BrokerProcessorFactory;
+import org.am.mypotrfolio.service.processor.BrokerDocumentProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -10,58 +12,53 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.am.common.amcommondata.model.enums.BrokerType;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentProcessorService {
     private static final Logger log = LoggerFactory.getLogger(DocumentProcessorService.class);
 
     private final Map<UUID, ProcessingStatus> processStatusMap = new ConcurrentHashMap<>();
-    private final BrokerProcessorFactory brokerProcessorFactory;
+    private final BrokerDocumentProcessor brokerDocumentProcessor;
 
-    public DocumentProcessorService(BrokerProcessorFactory brokerProcessorFactory) {
-        this.brokerProcessorFactory = brokerProcessorFactory;
-    }
-
-    public DocumentProcessResponse processDocument(MultipartFile file, String documentType) {
-        UUID processId = UUID.randomUUID();
-        log.info("[ProcessId: {}] Starting document processing for type: {}", processId, documentType);
-        processStatusMap.put(processId, ProcessingStatus.QUEUED);
+    public DocumentProcessResponse processDocument(MultipartFile file, DocumentType documentType) {
+        var portfolioRequest = getPortfolioRequest(file, documentType);
+        log.info("[ProcessId: {}] Starting document processing for type: {}", portfolioRequest.getRequestId(), documentType);
+        processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.QUEUED);
         
         try {
-            if (documentType.equals("BROKER_PORTFOLIO")) {
                 // Extract broker type from file name or content
-                log.debug("[ProcessId: {}] Detecting broker type from file", processId);
-                BrokerType brokerType = detectBrokerType(file);
-                log.info("[ProcessId: {}] Detected broker type: {}", processId, brokerType);
+                log.debug("[ProcessId: {}] Detecting broker type from file", portfolioRequest.getRequestId());
+                log.info("[ProcessId: {}] Detected broker type: {}", portfolioRequest.getRequestId(), portfolioRequest.getBrokerType());
                 
-                var processor = brokerProcessorFactory.getProcessor(brokerType);
-                
-                processStatusMap.put(processId, ProcessingStatus.PROCESSING);
-                log.info("[ProcessId: {}] Processing document with {} processor", processId, brokerType);
-                DocumentProcessResponse response = processor.processDocument(file, processId, brokerType);
-                response.setProcessId(processId);
+                processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.PROCESSING);
+                log.info("[ProcessId: {}] Processing document with {} processor", portfolioRequest.getRequestId(), portfolioRequest.getBrokerType());
+                DocumentProcessResponse response = brokerDocumentProcessor.processDocument(portfolioRequest);
+                response.setProcessId(portfolioRequest.getRequestId());
                 response.setStatus(ProcessingStatus.COMPLETED);
-                processStatusMap.put(processId, ProcessingStatus.COMPLETED);
+                processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.COMPLETED);
                 
-                log.info("[ProcessId: {}] Successfully completed document processing", processId);
+                log.info("[ProcessId: {}] Successfully completed document processing", portfolioRequest.getRequestId());
                 return response;
-            } 
-            
-            else {
-                // Handle other document types (mutual funds, NPS, etc.)
-                log.info("[ProcessId: {}] Processing non-broker document type: {}", processId, documentType);
-                return processOtherDocumentTypes(processId, file, documentType);
-            }
+        
         } catch (Exception e) {
-            log.error("[ProcessId: {}] Failed to process document: {}", processId, e.getMessage(), e);
-            processStatusMap.put(processId, ProcessingStatus.FAILED);
+            log.error("[ProcessId: {}] Failed to process document: {}", portfolioRequest.getRequestId(), e.getMessage(), e);
+            processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.FAILED);
             throw new RuntimeException("Failed to process document: " + e.getMessage(), e);
         }
     }
 
-    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files, String documentType) {
+    private PortfolioRequest getPortfolioRequest(MultipartFile file, DocumentType documentType) {
+        UUID processId = UUID.randomUUID();
+        BrokerType brokerType = detectBrokerType(file);
+        return PortfolioRequest.builder().file(file).documentType(documentType).requestId(processId).brokerType(brokerType).build();
+    }
+
+    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files,  DocumentType documentType) {
         UUID batchId = UUID.randomUUID();
         log.info("[BatchId: {}] Starting batch processing of {} documents", batchId, files.size());
         List<DocumentProcessResponse> responses = new ArrayList<>();
@@ -98,6 +95,9 @@ public class DocumentProcessorService {
         }
         else if (filename.contains("MSTOCK")) {
             return BrokerType.MSTOCK;
+        }
+        else if (filename.contains("GROWW")) {
+            return BrokerType.GROW;
         }
         throw new IllegalArgumentException("Unable to detect broker type from file: " + filename);
     }

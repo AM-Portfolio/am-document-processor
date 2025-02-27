@@ -45,6 +45,11 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
         return parseExcelFile(file, 0, 0 , 0);
     }
 
+    @Override
+    protected List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception {
+        return parseExcelFile(file, 20, 20, 0);
+    }
+
     private List<Map<String, String>> parseExcelFile(MultipartFile file, int headerRow, int skipRows, int skipColumns) throws Exception {
         List<Map<String, String>> jsonList = new ArrayList<>();
 
