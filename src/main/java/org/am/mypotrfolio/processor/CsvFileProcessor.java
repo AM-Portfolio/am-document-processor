@@ -42,7 +42,7 @@ public class CsvFileProcessor extends AbstractFileProcessor {
 
     @Override
     protected List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception {
-        return parseCsvFile(file, 19);
+        return parseCsvFile(file, 20);
     }
 
     private List<Map<String, String>> parseCsvFile(MultipartFile file, int skipLines) throws Exception {

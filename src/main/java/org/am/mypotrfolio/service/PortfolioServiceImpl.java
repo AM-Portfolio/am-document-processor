@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.am.mypotrfolio.domain.common.MutualFundAsset;
+import org.am.mypotrfolio.domain.common.PortfolioRequest;
 import org.am.mypotrfolio.domain.common.StockAsset;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
@@ -35,34 +36,34 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Set<AssetModel> processEquityFile(MultipartFile file, UUID processId, BrokerType brokerType) {
+    public Set<AssetModel> processEquityFile(PortfolioRequest portfolioRequest) {
         
-        log.info("[ProcessId: {}] Starting to process stokcs portfolio file: {}", processId, file.getOriginalFilename());
+        log.info("[ProcessId: {}] Starting to process stokcs portfolio file: {}", portfolioRequest.getRequestId(), portfolioRequest.getFile().getOriginalFilename());
         try {
             // Process the file using appropriate processor
-            log.debug("[ProcessId: {}] Getting file processor for file type", processId);
-            List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
-                    .processFile(file, brokerType);
-            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", processId);
-            return processPortfolioFileAndGetAssets(fileData, brokerType, processId);
+            log.debug("[ProcessId: {}] Getting file processor for file type", portfolioRequest.getRequestId());
+            List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(portfolioRequest.getFile())
+                    .processFile(portfolioRequest.getFile(), portfolioRequest.getBrokerType());
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", portfolioRequest.getRequestId());
+            return processPortfolioFileAndGetAssets(fileData, portfolioRequest.getBrokerType(), portfolioRequest.getRequestId());
         } catch (Exception e) {
-            log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
+            log.error("[ProcessId: {}] Error processing portfolio file: {}", portfolioRequest.getRequestId(), e.getMessage(), e);
             throw e;
         }
     }
 
     @Override
-    public Set<MutualFundModel> processMutualFundFile(MultipartFile file, UUID processId, BrokerType brokerType) {
-        log.info("[ProcessId: {}] Starting to process mutual funds portfolio file: {}", processId, file.getOriginalFilename());
+    public Set<MutualFundModel> processMutualFundFile(PortfolioRequest portfolioRequest) {
+        log.info("[ProcessId: {}] Starting to process mutual funds portfolio file: {}", portfolioRequest.getRequestId(), portfolioRequest.getFile().getOriginalFilename());
         try {
             // Process the file using appropriate processor
-            log.debug("[ProcessId: {}] Getting file processor for file type", processId);
-            List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
-                    .processFile(file, brokerType);
-            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", processId);
-            return processMutualFundsPortfolioFileAndGetAssets(fileData, brokerType, processId);
+            log.debug("[ProcessId: {}] Getting file processor for file type", portfolioRequest.getRequestId());
+            List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(portfolioRequest.getFile())
+                    .processFile(portfolioRequest.getFile(), portfolioRequest.getBrokerType());
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", portfolioRequest.getRequestId());
+            return processMutualFundsPortfolioFileAndGetAssets(fileData, portfolioRequest.getBrokerType(), portfolioRequest.getRequestId());
         } catch (Exception e) {
-            log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
+            log.error("[ProcessId: {}] Error processing portfolio file: {}", portfolioRequest.getRequestId(), e.getMessage(), e);
             throw e;
         }
     }

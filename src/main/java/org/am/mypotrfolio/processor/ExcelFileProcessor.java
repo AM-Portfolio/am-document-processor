@@ -47,7 +47,7 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
 
     @Override
     protected List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception {
-        return parseExcelFile(file, 0, 19, 0);
+        return parseExcelFile(file, 20, 20, 0);
     }
 
     private List<Map<String, String>> parseExcelFile(MultipartFile file, int headerRow, int skipRows, int skipColumns) throws Exception {
