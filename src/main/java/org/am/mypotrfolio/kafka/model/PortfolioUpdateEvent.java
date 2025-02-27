@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
 import com.am.common.amcommondata.model.enums.BrokerType;
 
 import lombok.AllArgsConstructor;
@@ -20,5 +21,6 @@ public class PortfolioUpdateEvent {
     private BrokerType brokerType;
     private String userId;
     private Set<AssetModel> assets;
+    private Set<MutualFundModel> mutualFunds;
     private long timestamp;
 }

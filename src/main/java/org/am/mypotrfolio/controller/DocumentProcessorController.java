@@ -1,5 +1,6 @@
 package org.am.mypotrfolio.controller;
 
+import org.am.mypotrfolio.domain.common.DocumentType;
 import org.am.mypotrfolio.model.DocumentProcessResponse;
 import org.am.mypotrfolio.model.ProcessingStatus;
 import org.am.mypotrfolio.service.DocumentProcessorService;
@@ -21,14 +22,14 @@ public class DocumentProcessorController {
     @PostMapping("/process")
     public ResponseEntity<DocumentProcessResponse> processDocument(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("documentType") String documentType) {
+            @RequestParam("documentType") DocumentType documentType) {
         return ResponseEntity.ok(documentProcessorService.processDocument(file, documentType));
     }
 
     @PostMapping("/batch-process")
     public ResponseEntity<List<DocumentProcessResponse>> processBatchDocuments(
             @RequestParam("files") List<MultipartFile> files,
-            @RequestParam("documentType") String documentType) {
+            @RequestParam("documentType") DocumentType documentType) {
         return ResponseEntity.ok(documentProcessorService.processBatchDocuments(files, documentType));
     }
 

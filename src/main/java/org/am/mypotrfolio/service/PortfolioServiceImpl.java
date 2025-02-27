@@ -7,7 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.am.mypotrfolio.domain.common.StockPortfolio;
+import org.am.mypotrfolio.domain.common.MutualFundAsset;
+import org.am.mypotrfolio.domain.common.StockAsset;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
 import com.am.common.amcommondata.model.enums.AssetType;
 import com.am.common.amcommondata.model.enums.BrokerType;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -32,63 +34,116 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final NseSecurityRepository nseSecurityRepository;
     private final ObjectMapper objectMapper;
 
-    @SuppressWarnings("rawtypes")
-    @SneakyThrows
     @Override
-    public Set<AssetModel> processPortfolioFile(MultipartFile file, UUID processId, BrokerType brokerType) {
-        log.info("[ProcessId: {}] Starting to process portfolio file: {}", processId, file.getOriginalFilename());
+    public Set<AssetModel> processEquityFile(MultipartFile file, UUID processId, BrokerType brokerType) {
+        
+        log.info("[ProcessId: {}] Starting to process stokcs portfolio file: {}", processId, file.getOriginalFilename());
         try {
             // Process the file using appropriate processor
             log.debug("[ProcessId: {}] Getting file processor for file type", processId);
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
                     .processFile(file, brokerType);
             log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", processId);
-
-            // Convert the data to StockPortfolio objects
-            String payload = objectMapper.writeValueAsString(fileData);
-            List<StockPortfolio> portfolios = objectMapper.readValue(payload,
-                    new TypeReference<List<StockPortfolio>>() {});
-
-            // Convert to AssetModels
-            Set<AssetModel> portfolioAssets = new HashSet<>();
-            for (StockPortfolio stock : portfolios) {
-                log.debug("[ProcessId: {}] Processing stock: {}", processId, stock.getSymbol());
-                // Try to find NSE security by name or other identifiers
-                var quantity = getDouble(stock.getQuantity());
-                var avgBuyingPrice = stock.getAvgPrice() != null ? getDouble(stock.getAvgPrice()) : 0.0;
-                var investedValue = stock.getInvestmentValue() != null ? getDouble(stock.getInvestmentValue())
-                        : quantity * avgBuyingPrice;
-                AssetModel.AssetModelBuilder assetBuilder = AssetModel.builder()
-                        .assetType(AssetType.EQUITY)
-                        .isin(stock.getIsin())
-                        .symbol(stock.getSymbol())
-                        .avgBuyingPrice(avgBuyingPrice)
-                        .quantity(quantity)
-                        .investmentValue(investedValue)
-                        .name(stock.getName());
-
-                if (stock.getIsin() == null || stock.getIsin().isEmpty()) {
-                    Optional<NseSecurity> nseSecurity = nseSecurityRepository
-                            .findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
-                    // Enhance asset with NSE security information if available
-                    if (nseSecurity.isPresent()) {
-                        NseSecurity security = nseSecurity.get();
-                        log.debug("[ProcessId: {}] Found NSE security information for: {}", processId,
-                                stock.getSymbol());
-                        assetBuilder.isin(security.getIsin());
-                        assetBuilder.symbol(security.getSecurityId());
-                        assetBuilder.name(security.getSecurityName());
-                    }
-                }
-
-                portfolioAssets.add(assetBuilder.build());
-            }
-
-            log.info("[ProcessId: {}] Successfully processed {} portfolio entries", processId, portfolioAssets.size());
-            return portfolioAssets;
+            return processPortfolioFileAndGetAssets(fileData, brokerType, processId);
         } catch (Exception e) {
             log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
             throw e;
         }
+    }
+
+    @Override
+    public Set<MutualFundModel> processMutualFundFile(MultipartFile file, UUID processId, BrokerType brokerType) {
+        log.info("[ProcessId: {}] Starting to process mutual funds portfolio file: {}", processId, file.getOriginalFilename());
+        try {
+            // Process the file using appropriate processor
+            log.debug("[ProcessId: {}] Getting file processor for file type", processId);
+            List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(file)
+                    .processFile(file, brokerType);
+            log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", processId);
+            return processMutualFundsPortfolioFileAndGetAssets(fileData, brokerType, processId);
+        } catch (Exception e) {
+            log.error("[ProcessId: {}] Error processing portfolio file: {}", processId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    @SneakyThrows
+    public Set<MutualFundModel> processMutualFundsPortfolioFileAndGetAssets(List<Map<String, String>> fileData, BrokerType brokerType, UUID processId) {
+       // Convert the data to StockPortfolio objects
+       String payload = objectMapper.writeValueAsString(fileData);
+       List<MutualFundAsset> portfolios = objectMapper.readValue(payload, new TypeReference<List<MutualFundAsset>>() {});
+        // Convert to AssetModels
+            Set<MutualFundModel> portfolioAssets = new HashSet<>();
+            for (MutualFundAsset mutualFund : portfolios) {
+                log.debug("[ProcessId: {}] Processing mutual funds: {}", processId, mutualFund.getSchemeName());
+                // Try to find NSE security by name or other identifiers
+                var assetModel = getMutualFundModel(mutualFund, brokerType);
+                portfolioAssets.add(assetModel);
+            }
+       log.info("[ProcessId: {}] Successfully processed {} portfolio entries", processId, portfolioAssets.size());
+       return portfolioAssets;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private MutualFundModel getMutualFundModel(MutualFundAsset mutualFund, BrokerType brokerType) {
+        var quantity = getDouble(mutualFund.getUnits());
+        var investedValue = mutualFund.getInvestedValue() != null ? getDouble(mutualFund.getInvestedValue()) : 0.0;
+        var currentValue = mutualFund.getCurrentValue() != null ? getDouble(mutualFund.getCurrentValue()) : 0.0;
+        MutualFundModel.MutualFundModelBuilder assetBuilder = MutualFundModel.builder()
+                .assetType(AssetType.MUTUAL_FUND)
+                .name(mutualFund.getSchemeName())
+                .fundHouse(mutualFund.getAmc())
+                .category(mutualFund.getCategory())
+                .subCategory(mutualFund.getSubCategory())
+                .quantity(quantity)
+                .investmentValue(investedValue)
+                .currentValue(currentValue);
+        return assetBuilder.build();
+    }
+
+    @SneakyThrows
+    public Set<AssetModel> processPortfolioFileAndGetAssets(List<Map<String, String>> fileData, BrokerType brokerType, UUID processId) {
+       // Convert the data to StockPortfolio objects
+       String payload = objectMapper.writeValueAsString(fileData);
+       List<StockAsset> portfolios = objectMapper.readValue(payload, new TypeReference<List<StockAsset>>() {});
+        // Convert to AssetModels
+            Set<AssetModel> portfolioAssets = new HashSet<>();
+            for (StockAsset stock : portfolios) {
+                log.debug("[ProcessId: {}] Processing stock: {}", processId, stock.getSymbol());
+                // Try to find NSE security by name or other identifiers
+                var assetModel = getAssetModel(stock, brokerType);
+                portfolioAssets.add(assetModel);
+            }
+       log.info("[ProcessId: {}] Successfully processed {} portfolio entries", processId, portfolioAssets.size());
+       return portfolioAssets;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private AssetModel getAssetModel(StockAsset stock, BrokerType brokerType) {
+        var quantity = getDouble(stock.getQuantity());
+        var avgBuyingPrice = stock.getAvgPrice() != null ? getDouble(stock.getAvgPrice()) : 0.0;
+        var investedValue = stock.getInvestmentValue() != null ? getDouble(stock.getInvestmentValue())
+                : quantity * avgBuyingPrice;
+        AssetModel.AssetModelBuilder assetBuilder = AssetModel.builder()
+                .assetType(AssetType.EQUITY)
+                .isin(stock.getIsin())
+                .symbol(stock.getSymbol())
+                .avgBuyingPrice(avgBuyingPrice)
+                .quantity(quantity)
+                .investmentValue(investedValue)
+                .name(stock.getName());
+
+        if (stock.getIsin() == null || stock.getIsin().isEmpty()) {
+            Optional<NseSecurity> nseSecurity = nseSecurityRepository
+                    .findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
+            // Enhance asset with NSE security information if available
+            if (nseSecurity.isPresent()) {
+                NseSecurity security = nseSecurity.get();
+                assetBuilder.isin(security.getIsin());
+                assetBuilder.symbol(security.getSecurityId());
+                assetBuilder.name(security.getSecurityName());
+            }
+        }
+        return assetBuilder.build();
     }
 }

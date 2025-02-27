@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockPortfolio {
+public class StockAsset {
 
     @JsonProperty("Name")
     @JsonAlias({"Name", "prop1"})

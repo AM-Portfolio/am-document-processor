@@ -23,6 +23,9 @@ public abstract class AbstractFileProcessor implements FileProcessor {
             } else if (brokerType.isDhan()) {
                 log.debug("Using Dhan parser");
                 return parseDhanFile(file);
+            } else if (brokerType.isGrow()) {
+                log.debug("Using Grow parser");
+                return parseGrowFile(file);
             }
             log.debug("Using default Dhan parser");
             return parseDhanFile(file);
@@ -35,6 +38,7 @@ public abstract class AbstractFileProcessor implements FileProcessor {
     protected abstract List<Map<String, String>> parseZerodhaFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseMStockFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseDhanFile(MultipartFile file) throws Exception;
+    protected abstract List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception;
 
     protected Map<String, String> createRowData(String[] headers, String[] values) {
         Map<String, String> row = new LinkedHashMap<>();
