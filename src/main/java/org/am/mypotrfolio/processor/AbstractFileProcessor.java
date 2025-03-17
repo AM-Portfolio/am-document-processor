@@ -14,6 +14,10 @@ public abstract class AbstractFileProcessor implements FileProcessor {
     public List<Map<String, String>> processFile(MultipartFile file, BrokerType brokerType) {
         log.info("Processing {} file for broker: {}", getFileType(), brokerType);
         try {
+            if (brokerType == null) {
+                log.debug("Using NSE Security parser");
+                return parseNseSecurityFile(file);
+            }
             if (brokerType.isZerodha()) {
                 log.debug("Using Zerodha parser");
                 return parseZerodhaFile(file);
@@ -39,6 +43,7 @@ public abstract class AbstractFileProcessor implements FileProcessor {
     protected abstract List<Map<String, String>> parseMStockFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseDhanFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception;
+    protected abstract List<Map<String, String>> parseNseSecurityFile(MultipartFile file) throws Exception;
 
     protected Map<String, String> createRowData(String[] headers, String[] values) {
         Map<String, String> row = new LinkedHashMap<>();

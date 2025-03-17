@@ -8,13 +8,12 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.am.mypotrfolio.domain.common.MutualFundAsset;
-import org.am.mypotrfolio.domain.common.PortfolioRequest;
+import org.am.mypotrfolio.domain.common.DocumentRequest;
 import org.am.mypotrfolio.domain.common.StockAsset;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
 import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
@@ -36,7 +35,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Set<AssetModel> processEquityFile(PortfolioRequest portfolioRequest) {
+    public Set<AssetModel> processEquityFile(DocumentRequest portfolioRequest) {
         
         log.info("[ProcessId: {}] Starting to process stokcs portfolio file: {}", portfolioRequest.getRequestId(), portfolioRequest.getFile().getOriginalFilename());
         try {
@@ -53,7 +52,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     }
 
     @Override
-    public Set<MutualFundModel> processMutualFundFile(PortfolioRequest portfolioRequest) {
+    public Set<MutualFundModel> processMutualFundFile(DocumentRequest portfolioRequest) {
         log.info("[ProcessId: {}] Starting to process mutual funds portfolio file: {}", portfolioRequest.getRequestId(), portfolioRequest.getFile().getOriginalFilename());
         try {
             // Process the file using appropriate processor

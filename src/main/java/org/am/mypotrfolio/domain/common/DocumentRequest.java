@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PortfolioRequest {
+public class DocumentRequest {
 
     private UUID requestId;
     private BrokerType brokerType;
