@@ -1,5 +1,6 @@
 package org.am.mypotrfolio.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +24,7 @@ public class MessagingEventService {
 
     public void sendStockPortfolioMessage(List<EquityModel> assetModels, UUID processId, BrokerType brokerType) {
        var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType);
-       portfolioUpdateEvent.setAssets(assetModels);
+       portfolioUpdateEvent.setEquities(assetModels);
        kafkaProducerService.sendMessage(portfolioUpdateEvent);
     }
 
@@ -44,7 +45,7 @@ public class MessagingEventService {
                 .id(processId)
                 .userId("MKU257")
                 .brokerType(brokerType)
-                .timestamp(System.currentTimeMillis())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 }

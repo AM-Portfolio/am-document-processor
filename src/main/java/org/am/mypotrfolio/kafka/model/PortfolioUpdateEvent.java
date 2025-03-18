@@ -1,10 +1,9 @@
 package org.am.mypotrfolio.kafka.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
-import com.am.common.amcommondata.model.asset.AssetModel;
 import com.am.common.amcommondata.model.asset.equity.EquityModel;
 import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
 import com.am.common.amcommondata.model.enums.BrokerType;
@@ -25,7 +24,7 @@ public class PortfolioUpdateEvent {
     private UUID id;
     private BrokerType brokerType;
     private String userId;
-    private List<EquityModel> assets;
+    private List<EquityModel> equities;
     private List<MutualFundModel> mutualFunds;
-    private long timestamp;
+    private LocalDateTime timestamp;
 }
