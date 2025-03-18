@@ -31,7 +31,7 @@ spring:
 
 app:
   kafka:
-    topic: am-document-topic
+    topic: am-portfolio-topic
   persistence:
     mongodb:
       uri: mongodb://admin:password@localhost:27017/nse_security?authSource=admin
