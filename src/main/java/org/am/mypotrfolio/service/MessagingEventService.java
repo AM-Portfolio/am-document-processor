@@ -1,6 +1,6 @@
 package org.am.mypotrfolio.service;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import org.am.mypotrfolio.kafka.model.PortfolioUpdateEvent;
@@ -8,7 +8,7 @@ import org.am.mypotrfolio.kafka.producer.KafkaProducerService;
 import org.am.mypotrfolio.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
 
-import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.asset.equity.EquityModel;
 import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
 import com.am.common.amcommondata.model.enums.BrokerType;
 
@@ -21,13 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 public class MessagingEventService {
     private final KafkaProducerService kafkaProducerService;
 
-    public void sendStockPortfolioMessage(Set<AssetModel> assetModels, UUID processId, BrokerType brokerType) {
+    public void sendStockPortfolioMessage(List<EquityModel> assetModels, UUID processId, BrokerType brokerType) {
        var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType);
        portfolioUpdateEvent.setAssets(assetModels);
        kafkaProducerService.sendMessage(portfolioUpdateEvent);
     }
 
-    public void sendMutualFundPortfolioMessage(Set<MutualFundModel> mFundModels, UUID processId, BrokerType brokerType) {
+    public void sendMutualFundPortfolioMessage(List<MutualFundModel> mFundModels, UUID processId, BrokerType brokerType) {
         var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType);
         portfolioUpdateEvent.setMutualFunds(mFundModels);
         kafkaProducerService.sendMessage(portfolioUpdateEvent);

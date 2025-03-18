@@ -11,6 +11,7 @@ import org.am.mypotrfolio.service.PortfolioService;
 import org.springframework.stereotype.Component;
 
 import com.am.common.amcommondata.model.asset.AssetModel;
+import com.am.common.amcommondata.model.asset.equity.EquityModel;
 import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
 import com.am.common.amcommondata.model.enums.BrokerType;
 import com.am.common.amcommondata.model.security.SecurityModel;
@@ -46,7 +47,7 @@ public class DocumentProcessorImpl implements DocumentProcessor {
     }
 
     private void processEquityPortfolio(DocumentRequest documentRequest) {
-        Set<AssetModel> assets = portfolioService.processEquityFile(documentRequest);
+        List<EquityModel> assets = portfolioService.processEquityFile(documentRequest);
         messagingEventService.sendStockPortfolioMessage(assets, documentRequest.getRequestId(), documentRequest.getBrokerType());
     }
 
@@ -56,7 +57,7 @@ public class DocumentProcessorImpl implements DocumentProcessor {
     }
 
     private void processMutualFundsPortfolio(DocumentRequest documentRequest) {
-        Set<MutualFundModel> mutualFunds = portfolioService.processMutualFundFile(documentRequest);
+        List<MutualFundModel> mutualFunds = portfolioService.processMutualFundFile(documentRequest);
         messagingEventService.sendMutualFundPortfolioMessage(mutualFunds, documentRequest.getRequestId(), documentRequest.getBrokerType());
     }
 
