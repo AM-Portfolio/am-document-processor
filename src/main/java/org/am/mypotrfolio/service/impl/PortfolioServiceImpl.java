@@ -1,12 +1,10 @@
-package org.am.mypotrfolio.service;
+package org.am.mypotrfolio.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+import java.util.Optional;
 
 import org.am.mypotrfolio.domain.common.MutualFundAsset;
 import org.am.mypotrfolio.domain.common.DocumentRequest;
@@ -14,6 +12,7 @@ import org.am.mypotrfolio.domain.common.StockAsset;
 import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
 import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
+import org.am.mypotrfolio.service.PortfolioService;
 import org.springframework.stereotype.Service;
 
 import com.am.common.amcommondata.model.asset.equity.EquityModel;
@@ -47,7 +46,7 @@ public class PortfolioServiceImpl implements PortfolioService {
             // Process the file using appropriate processor
             log.debug("[ProcessId: {}] Getting file processor for file type", portfolioRequest.getRequestId());
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(portfolioRequest.getFile())
-                    .processFile(portfolioRequest.getFile(), portfolioRequest.getBrokerType());
+                    .processFile(portfolioRequest.getFile(), portfolioRequest);
             log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", portfolioRequest.getRequestId());
             return processPortfolioFileAndGetAssets(fileData, portfolioRequest.getBrokerType(), portfolioRequest.getRequestId());
         } catch (Exception e) {
@@ -63,7 +62,7 @@ public class PortfolioServiceImpl implements PortfolioService {
             // Process the file using appropriate processor
             log.debug("[ProcessId: {}] Getting file processor for file type", portfolioRequest.getRequestId());
             List<Map<String, String>> fileData = fileProcessorFactory.getProcessor(portfolioRequest.getFile())
-                    .processFile(portfolioRequest.getFile(), portfolioRequest.getBrokerType());
+                    .processFile(portfolioRequest.getFile(), portfolioRequest);
             log.debug("[ProcessId: {}] Successfully processed file data, converting to StockPortfolio objects", portfolioRequest.getRequestId());
             return processMutualFundsPortfolioFileAndGetAssets(fileData, portfolioRequest.getBrokerType(), portfolioRequest.getRequestId());
         } catch (Exception e) {
@@ -71,7 +70,7 @@ public class PortfolioServiceImpl implements PortfolioService {
             throw e;
         }
     }
-    
+
     @SneakyThrows
     public List<MutualFundModel> processMutualFundsPortfolioFileAndGetAssets(List<Map<String, String>> fileData, BrokerType brokerType, UUID processId) {
        // Convert the data to StockPortfolio objects

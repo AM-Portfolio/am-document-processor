@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8060
 spring:
   servlet:
     multipart:
@@ -31,7 +31,8 @@ spring:
 
 app:
   kafka:
-    topic: am-portfolio-topic
+    portfolio-topic: am-portfolio
+    trade-topic: am-trade
   persistence:
     mongodb:
       uri: mongodb://admin:password@localhost:27017/nse_security?authSource=admin

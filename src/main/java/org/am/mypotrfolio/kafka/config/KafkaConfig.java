@@ -25,12 +25,20 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    @Value("${app.kafka.topic}")
-    private String topicName;
+    @Value("${app.kafka.portfolio-topic}")
+    private String portfolioTopic;
+
+    @Value("${app.kafka.trade-topic}")
+    private String tradeTopic;
 
     @Bean
     public NewTopic createTopic() {
-        return new NewTopic(topicName, 1, (short) 1);
+        return new NewTopic(portfolioTopic, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic createTradeTopic() {
+        return new NewTopic(tradeTopic, 1, (short) 1);
     }
 
     @Bean

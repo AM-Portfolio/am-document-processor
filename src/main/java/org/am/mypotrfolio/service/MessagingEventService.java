@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.am.mypotrfolio.kafka.model.PortfolioUpdateEvent;
+import org.am.mypotrfolio.kafka.model.TradeUpdateEvent;
 import org.am.mypotrfolio.kafka.producer.KafkaProducerService;
+import org.am.mypotrfolio.model.trade.FNOTradeType;
+import org.am.mypotrfolio.model.trade.TradeModel;
 import org.am.mypotrfolio.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +37,21 @@ public class MessagingEventService {
         kafkaProducerService.sendMessage(portfolioUpdateEvent);
      }
 
+    public void sendTradeFnoMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType) {
+        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType);
+        tradeUpdateEvent.setTrades(trades);
+        kafkaProducerService.sendTradeUpdateEvent(tradeUpdateEvent);
+        log.info("[ProcessId: {}] Successfully sent F&O trade update event with {} trades", processId, trades.size());
+    }
+
+    public void sendTradeEqMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType) {
+        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType);
+        tradeUpdateEvent.setTrades(trades);
+        tradeUpdateEvent.setTradeType(FNOTradeType.FUTIDX);
+        kafkaProducerService.sendTradeUpdateEvent(tradeUpdateEvent);
+        log.info("[ProcessId: {}] Successfully sent equity trade update event with {} trades", processId, trades.size());
+    }
+
     public void sendMessage(PortfolioUpdateEvent portfolioUpdateEvent, UUID processId, BrokerType brokerType) {
         log.info("[ProcessId: {}] Preparing to send portfolio update event and payload {}", processId, ObjectUtils.convertToJson(portfolioUpdateEvent));
         kafkaProducerService.sendMessage(portfolioUpdateEvent);
@@ -42,6 +60,15 @@ public class MessagingEventService {
 
     private PortfolioUpdateEvent buildPortfolioUpdateEvent(UUID processId, BrokerType brokerType) {
         return PortfolioUpdateEvent.builder()
+                .id(processId)
+                .userId("MKU257")
+                .brokerType(brokerType)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+    
+    private TradeUpdateEvent buildTradeUpdateEvent(UUID processId, BrokerType brokerType) {
+        return TradeUpdateEvent.builder()
                 .id(processId)
                 .userId("MKU257")
                 .brokerType(brokerType)

@@ -6,7 +6,9 @@ public enum DocumentType {
     NPS_STATEMENT("NPS_Statement"),
     COMPANY_FINANCIAL_REPORT("Company_Financial_Report"),
     STOCK_PORTFOLIO("Stock_Portfolio"),
-    NSE_INDICES("NSE_Indices");
+    NSE_INDICES("NSE_Indices"),
+    TRADE_FNO("Trade_FNO"),
+    TRADE_EQ("Trade_EQ");
     
     private String documentType;
         
@@ -50,5 +52,13 @@ public enum DocumentType {
 
     public boolean isNseIndices() {
         return "NSE_Indices".equals(documentType);
+    }
+
+    public boolean isTradeFno() {
+        return "Trade_FNO".equals(documentType);
+    }
+
+    public boolean isTradeEq() {
+        return "Trade_EQ".equals(documentType);
     }
 }
