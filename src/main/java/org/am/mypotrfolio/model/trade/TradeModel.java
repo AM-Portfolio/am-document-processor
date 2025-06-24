@@ -49,6 +49,7 @@ public class TradeModel {
         private Segment segment;
         private Series series;
         private FnOInfo fnoInfo;
+        
     }
 
     @Data
@@ -56,9 +57,11 @@ public class TradeModel {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ExecutionInfo {
+        private TradeType tradeType;
         private String auction;
         private Integer quantity;
         private BigDecimal price;
+        private Integer lotSize;
     }
 
     @Data

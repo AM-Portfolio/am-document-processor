@@ -4,26 +4,42 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
+
+import org.am.mypotrfolio.config.LotSizeConfig;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
 
 /**
  * Enum representing different index types in the market
  */
-public enum IndexType {
-    NIFTY("NIFTY", "Nifty 50", new BigDecimal(50)),
-    BANKNIFTY("BANKNIFTY", "Bank Nifty", new BigDecimal(25)),
-    FINNIFTY("FINNIFTY", "Financial Services Nifty", new BigDecimal(40)),
-    MIDCPNIFTY("MIDCPNIFTY", "Midcap Nifty", new BigDecimal(75)),
-    UNKNOWN("UNKNOWN", "Unknown Index", new BigDecimal(0));
+public enum IndexType implements ApplicationContextAware {
+    NIFTY("NIFTY", "Nifty 50"),
+    BANKNIFTY("BANKNIFTY", "Bank Nifty"),
+    FINNIFTY("FINNIFTY", "Financial Services Nifty"),
+    MIDCPNIFTY("MIDCPNIFTY", "Midcap Nifty"),
+    UNKNOWN("UNKNOWN", "Unknown Index");
 
+    private static LotSizeConfig lotSizeConfig;
+    
     private final String value;
     private final String description;
-    private final BigDecimal lotSize;
-
-    IndexType(String value, String description, BigDecimal lotSize) {
+    
+    IndexType(String value, String description) {
         this.value = value;
         this.description = description;
-        this.lotSize = lotSize;
+    }
+    
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        // This method will be called once for any enum constant
+        // We only need to set the lotSizeConfig once
+        if (IndexType.lotSizeConfig == null) {
+            IndexType.lotSizeConfig = applicationContext.getBean(LotSizeConfig.class);
+        }
     }
 
     @JsonValue
@@ -35,8 +51,33 @@ public enum IndexType {
         return description;
     }
     
+    /**
+     * Get the lot size for this index on the given date
+     * 
+     * @param date the date for which to get the lot size
+     * @return the lot size applicable on the given date
+     */
+    public BigDecimal getLotSize(LocalDate date) {
+        if (lotSizeConfig == null) {
+            // Fallback to default values if config is not available
+            switch (this) {
+                case NIFTY: return new BigDecimal(50);
+                case BANKNIFTY: return new BigDecimal(25);
+                case FINNIFTY: return new BigDecimal(40);
+                case MIDCPNIFTY: return new BigDecimal(75);
+                default: return BigDecimal.ONE;
+            }
+        }
+        return lotSizeConfig.getLotSize(this.value, date);
+    }
+    
+    /**
+     * Get the current lot size for this index
+     * 
+     * @return the current lot size
+     */
     public BigDecimal getLotSize() {
-        return lotSize;
+        return getLotSize(LocalDate.now());
     }
 
     @JsonCreator
@@ -68,12 +109,13 @@ public enum IndexType {
     }
     
     /**
-     * Get the lot size for a given symbol
+     * Get the lot size for a given symbol on the given date
      * 
      * @param symbol the symbol to get the lot size for
-     * @return the lot size for the symbol, or a default value if not found
+     * @param date the date for which to get the lot size
+     * @return the lot size for the symbol on the given date, or a default value if not found
      */
-    public static BigDecimal getLotSizeForSymbol(String symbol) {
+    public static BigDecimal getLotSizeForSymbol(String symbol, LocalDate date) {
         if (symbol == null) {
             return BigDecimal.ONE;
         }
@@ -81,7 +123,17 @@ public enum IndexType {
         return Arrays.stream(values())
                 .filter(indexType -> indexType.value.equalsIgnoreCase(symbol))
                 .findFirst()
-                .map(IndexType::getLotSize)
-                .orElse(new BigDecimal(1000)); // Default lot size for equity
+                .map(indexType -> indexType.getLotSize(date))
+                .orElse(null); // Default lot size for equity
+    }
+    
+    /**
+     * Get the current lot size for a given symbol
+     * 
+     * @param symbol the symbol to get the lot size for
+     * @return the current lot size for the symbol, or a default value if not found
+     */
+    public static BigDecimal getLotSizeForSymbol(String symbol) {
+        return getLotSizeForSymbol(symbol, LocalDate.now());
     }
 }

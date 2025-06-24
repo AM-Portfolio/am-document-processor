@@ -68,14 +68,21 @@ public class TradeMapper {
     }
 
     private TradeModel.ExecutionInfo buildExecutionInfo(Trade trade) {
-        return TradeModel.ExecutionInfo.builder()
+        String symbol = trade.getSymbol();
+        BigDecimal lotSize = determineLotSize(symbol, trade.getTradeDate());
+        TradeModel.ExecutionInfo.ExecutionInfoBuilder executionInfoBuilder = TradeModel.ExecutionInfo.builder()
+                .tradeType(TradeType.valueOf(trade.getTradeType().toUpperCase()))
                 .auction(trade.getAuction())
                 .quantity(trade.getQuantity().intValue())
-                .price(trade.getPrice())
-                .build();
+                .price(trade.getPrice());
+
+        if (lotSize != null) {
+            executionInfoBuilder.lotSize(trade.getQuantity().intValue() / lotSize.intValue());
+        }
+        
+        return executionInfoBuilder.build();
     }
 
-    
     /**
      * Builds FnO information by parsing the trade symbol.
      * Examples:
@@ -133,8 +140,8 @@ public class TradeMapper {
                    .optionType(optionType);
         }
         
-        // Set default lot size if available
-        //builder.lotSize(determineLotSize(symbol));
+        // Set lot size based on trade date
+        builder.lotSize(determineLotSize(symbol, trade.getTradeDate()));
         
         return builder.build();
     }
@@ -195,10 +202,24 @@ public class TradeMapper {
     }
     
     /**
-     * Determines the lot size based on the symbol
+     * Determines the lot size based on the symbol and trade date
+     * 
+     * @param symbol the trade symbol
+     * @param tradeDate the date of the trade
+     * @return the lot size applicable for the symbol on the given date
+     */
+    private BigDecimal determineLotSize(String symbol, LocalDate tradeDate) {
+        String baseSymbol = extractBaseSymbol(symbol, "");
+        return IndexType.getLotSizeForSymbol(baseSymbol, tradeDate);
+    }
+
+    /**
+     * Determines the current lot size based on the symbol
+     * 
+     * @param symbol the trade symbol
+     * @return the current lot size applicable for the symbol
      */
     private BigDecimal determineLotSize(String symbol) {
-        String baseSymbol = extractBaseSymbol(symbol, "");
-        return IndexType.getLotSizeForSymbol(baseSymbol);
+        return determineLotSize(symbol, LocalDate.now());
     }
 }

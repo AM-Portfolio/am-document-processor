@@ -7,6 +7,9 @@ spring:
       max-request-size: 10MB
   application:
     name: document-processor-data
+  profiles:
+    include:
+      - lot-sizes
   datasource:
      url: jdbc:postgresql://localhost:5432/postgres
      username: postgres
