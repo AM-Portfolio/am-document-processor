@@ -22,7 +22,6 @@ public class TradeModel {
     private BasicInfo basicInfo;
     private InstrumentInfo instrumentInfo;
     private ExecutionInfo executionInfo;
-    private FnOInfo fnoInfo;
     private Charges charges;
     private Financials financials;
 
@@ -47,8 +46,9 @@ public class TradeModel {
         private String symbol;
         private String isin;
         private String exchange;
-        private String segment;
-        private String series;
+        private Segment segment;
+        private Series series;
+        private FnOInfo fnoInfo;
     }
 
     @Data
@@ -69,7 +69,7 @@ public class TradeModel {
         private FNOTradeType instrumentType; // FUTIDX, OPTIDX, FUTEQ, OPTEQ
         private LocalDate expiryDate;
         private BigDecimal strikePrice;
-        private String optionType; // CE, PE, null for futures
+        private OptionType optionType; // CALL, PUT, NONE for futures
         private BigDecimal lotSize;
         private BigDecimal premiumValue;
     }

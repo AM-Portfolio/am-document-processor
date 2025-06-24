@@ -1,6 +1,5 @@
 package org.am.mypotrfolio.model.trade;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,11 +35,11 @@ public class Trade {
     
     @JsonProperty("segment")
     @JsonAlias({"Segment", "segment"})
-    private String segment;
+    private Segment segment;
     
     @JsonProperty("series")
     @JsonAlias({"Series", "series"})
-    private String series;
+    private Series series;
     
     @JsonProperty("tradeType")
     @JsonAlias({"Trade Type", "tradeType"})

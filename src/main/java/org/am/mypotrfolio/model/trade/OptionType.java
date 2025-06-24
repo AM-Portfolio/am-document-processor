@@ -5,24 +5,19 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Arrays;
 
-/**
- * Enum representing the type of F&O instrument
- */
-public enum FNOTradeType {
-    FUTIDX("FUTIDX", "Index Futures"),
-    OPTIDX("OPTIDX", "Index Options"),
-    FUTEQ("FUTEQ", "Equity Futures"),
-    OPTEQ("OPTEQ", "Equity Options"),
-    UNKNOWN("UNKNOWN", "Unknown Instrument Type");
-    
+public enum OptionType {
+    CALL("CE", "Call Option"),
+    PUT("PE", "Put Option"),
+    NONE(null, "Not Applicable");
+
     private final String value;
     private final String description;
-    
-    FNOTradeType(String value, String description) {
+
+    OptionType(String value, String description) {
         this.value = value;
         this.description = description;
     }
-    
+
     @JsonValue
     public String getValue() {
         return value;
@@ -31,16 +26,21 @@ public enum FNOTradeType {
     public String getDescription() {
         return description;
     }
-    
+
     @JsonCreator
-    public static FNOTradeType fromValue(String value) {
+    public static OptionType fromValue(String value) {
         if (value == null) {
-            return UNKNOWN;
+            return NONE;
         }
         
         return Arrays.stream(values())
-                .filter(type -> type.value.equalsIgnoreCase(value))
+                .filter(optionType -> {
+                    if (optionType.value == null) {
+                        return false;
+                    }
+                    return optionType.value.equalsIgnoreCase(value);
+                })
                 .findFirst()
-                .orElse(UNKNOWN);
+                .orElse(NONE);
     }
 }

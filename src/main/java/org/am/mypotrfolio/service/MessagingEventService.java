@@ -9,6 +9,7 @@ import org.am.mypotrfolio.kafka.model.TradeUpdateEvent;
 import org.am.mypotrfolio.kafka.producer.KafkaProducerService;
 import org.am.mypotrfolio.model.trade.FNOTradeType;
 import org.am.mypotrfolio.model.trade.TradeModel;
+import org.am.mypotrfolio.model.trade.TradeType;
 import org.am.mypotrfolio.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
 
@@ -44,10 +45,23 @@ public class MessagingEventService {
         log.info("[ProcessId: {}] Successfully sent F&O trade update event with {} trades", processId, trades.size());
     }
 
+    private FNOTradeType extractTradeType(List<TradeModel> trades) {
+        return trades.stream().findFirst().map(trade -> trade.getInstrumentInfo().getSegment()).map(segment -> {
+            if(segment.equals("F")) {
+                return FNOTradeType.FUTIDX;
+            } else if(segment.equals("O")) {
+                return FNOTradeType.OPTIDX;
+            } else if(segment.equals("E")) {
+                return FNOTradeType.FUTEQ;
+            } else {
+                return FNOTradeType.OPTEQ;
+            }
+        }).orElse(null);
+    }
+
     public void sendTradeEqMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType) {
         var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType);
         tradeUpdateEvent.setTrades(trades);
-        tradeUpdateEvent.setTradeType(FNOTradeType.FUTIDX);
         kafkaProducerService.sendTradeUpdateEvent(tradeUpdateEvent);
         log.info("[ProcessId: {}] Successfully sent equity trade update event with {} trades", processId, trades.size());
     }
