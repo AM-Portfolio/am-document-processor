@@ -22,4 +22,6 @@ public class DocumentRequest {
     private BrokerType brokerType;
     private DocumentType documentType;
     private MultipartFile file;
+    private String portfolioId;
+    private String userId;
 }

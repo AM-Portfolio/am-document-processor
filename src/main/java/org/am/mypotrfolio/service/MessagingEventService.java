@@ -26,20 +26,20 @@ import lombok.extern.slf4j.Slf4j;
 public class MessagingEventService {
     private final KafkaProducerService kafkaProducerService;
 
-    public void sendStockPortfolioMessage(List<EquityModel> assetModels, UUID processId, BrokerType brokerType) {
-       var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType);
+    public void sendStockPortfolioMessage(List<EquityModel> assetModels, UUID processId, BrokerType brokerType, String portfolioId, String userId) {
+       var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType, portfolioId, userId);
        portfolioUpdateEvent.setEquities(assetModels);
        kafkaProducerService.sendMessage(portfolioUpdateEvent);
     }
 
-    public void sendMutualFundPortfolioMessage(List<MutualFundModel> mFundModels, UUID processId, BrokerType brokerType) {
-        var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType);
+    public void sendMutualFundPortfolioMessage(List<MutualFundModel> mFundModels, UUID processId, BrokerType brokerType, String portfolioId, String userId) {
+        var portfolioUpdateEvent = buildPortfolioUpdateEvent(processId, brokerType, portfolioId, userId);
         portfolioUpdateEvent.setMutualFunds(mFundModels);
         kafkaProducerService.sendMessage(portfolioUpdateEvent);
      }
 
-    public void sendTradeFnoMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType) {
-        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType);
+    public void sendTradeFnoMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType, String portfolioId, String userId) {
+        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType, portfolioId, userId);
         tradeUpdateEvent.setTrades(trades);
         kafkaProducerService.sendTradeUpdateEvent(tradeUpdateEvent);
         log.info("[ProcessId: {}] Successfully sent F&O trade update event with {} trades", processId, trades.size());
@@ -59,8 +59,8 @@ public class MessagingEventService {
         }).orElse(null);
     }
 
-    public void sendTradeEqMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType) {
-        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType);
+    public void sendTradeEqMessage(List<TradeModel> trades, UUID processId, BrokerType brokerType, String portfolioId, String userId) {
+        var tradeUpdateEvent = buildTradeUpdateEvent(processId, brokerType, portfolioId, userId);
         tradeUpdateEvent.setTrades(trades);
         kafkaProducerService.sendTradeUpdateEvent(tradeUpdateEvent);
         log.info("[ProcessId: {}] Successfully sent equity trade update event with {} trades", processId, trades.size());
@@ -72,20 +72,22 @@ public class MessagingEventService {
         log.info("[ProcessId: {}] Successfully sent portfolio update event", processId);
     }
 
-    private PortfolioUpdateEvent buildPortfolioUpdateEvent(UUID processId, BrokerType brokerType) {
+    private PortfolioUpdateEvent buildPortfolioUpdateEvent(UUID processId, BrokerType brokerType, String portfolioId, String userId) {
         return PortfolioUpdateEvent.builder()
                 .id(processId)
-                .userId("MKU257")
+                .userId(userId)
                 .brokerType(brokerType)
                 .timestamp(LocalDateTime.now())
+                .portfolioId(portfolioId)
                 .build();
     }
     
-    private TradeUpdateEvent buildTradeUpdateEvent(UUID processId, BrokerType brokerType) {
+    private TradeUpdateEvent buildTradeUpdateEvent(UUID processId, BrokerType brokerType, String portfolioId, String userId) {
         return TradeUpdateEvent.builder()
                 .id(processId)
-                .userId("MKU257")
+                .userId(userId)
                 .brokerType(brokerType)
+                .portfolioId(portfolioId)
                 .timestamp(LocalDateTime.now())
                 .build();
     }

@@ -25,8 +25,8 @@ public class DocumentProcessorService {
     private final Map<UUID, ProcessingStatus> processStatusMap = new ConcurrentHashMap<>();
     private final DocumentProcessor documentProcessor;
 
-    public DocumentProcessResponse processDocument(MultipartFile file, DocumentType documentType) {
-        var documentRequest = getDocumentRequest(file, documentType);
+    public DocumentProcessResponse processDocument(MultipartFile file, DocumentType documentType, String portfolioId, String userId) {
+        var documentRequest = getDocumentRequest(file, documentType, portfolioId, userId);
         log.info("[ProcessId: {}] Starting document processing for type: {}", documentRequest.getRequestId(), documentType);
         processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.QUEUED);
         
@@ -37,7 +37,7 @@ public class DocumentProcessorService {
                 
                 processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.PROCESSING);
                 log.info("[ProcessId: {}] Processing document with {} processor", documentRequest.getRequestId(), documentRequest.getBrokerType());
-                DocumentProcessResponse response = documentProcessor.processDocument(documentRequest);
+                DocumentProcessResponse response = documentProcessor.processDocument(documentRequest, portfolioId, userId);
                 response.setProcessId(documentRequest.getRequestId());
                 response.setStatus(ProcessingStatus.COMPLETED);
                 processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.COMPLETED);
@@ -52,19 +52,19 @@ public class DocumentProcessorService {
         }
     }
 
-    private DocumentRequest getDocumentRequest(MultipartFile file, DocumentType documentType) {
+    private DocumentRequest getDocumentRequest(MultipartFile file, DocumentType documentType, String portfolioId, String userId) {
         UUID processId = UUID.randomUUID();
         BrokerType brokerType = detectBrokerType(file);
-        return DocumentRequest.builder().file(file).documentType(documentType).requestId(processId).brokerType(brokerType).build();
+        return DocumentRequest.builder().file(file).documentType(documentType).requestId(processId).brokerType(brokerType).portfolioId(portfolioId).userId(userId).build();
     }
 
-    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files,  DocumentType documentType) {
+    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files,  DocumentType documentType, String portfolioId, String userId) {
         UUID batchId = UUID.randomUUID();
         log.info("[BatchId: {}] Starting batch processing of {} documents", batchId, files.size());
         List<DocumentProcessResponse> responses = new ArrayList<>();
         
         for (MultipartFile file : files) {
-            responses.add(processDocument(file, documentType));
+            responses.add(processDocument(file, documentType, portfolioId, userId));
         }
         
         log.info("[BatchId: {}] Completed batch processing", batchId);

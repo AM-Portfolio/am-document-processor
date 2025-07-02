@@ -27,8 +27,8 @@ public class DocumentProcessorImpl implements DocumentProcessor {
     private final TradeService tradeService;
 
     @Override
-    public DocumentProcessResponse processDocument(DocumentRequest documentRequest) {
-        processPortfolio(documentRequest);
+    public DocumentProcessResponse processDocument(DocumentRequest documentRequest, String portfolioId, String userId) {
+        processPortfolio(documentRequest, portfolioId, userId);
         DocumentProcessResponse response = new DocumentProcessResponse();
         response.setDocumentType(documentRequest.getDocumentType().name());
         response.setFileName(documentRequest.getFile().getOriginalFilename());
@@ -36,43 +36,43 @@ public class DocumentProcessorImpl implements DocumentProcessor {
         return response;
     }
 
-    private void processPortfolio(DocumentRequest documentRequest) {
+    private void processPortfolio(DocumentRequest documentRequest, String portfolioId, String userId) {
         if(documentRequest.getDocumentType().isStockPortfolio()) {
-            processEquityPortfolio(documentRequest);
+            processEquityPortfolio(documentRequest, portfolioId, userId);
         } else if(documentRequest.getDocumentType().isMutualFund()) {
-            processMutualFundsPortfolio(documentRequest);
+            processMutualFundsPortfolio(documentRequest, portfolioId, userId);
         } else if(documentRequest.getDocumentType().isNseIndices()) {
-            processNseIndices(documentRequest);
+            processNseIndices(documentRequest, portfolioId);
         } else if(documentRequest.getDocumentType().isTradeFno()) {
-            processTradeFno(documentRequest);
+            processTradeFno(documentRequest, portfolioId, userId);
         } else if(documentRequest.getDocumentType().isTradeEq()) {
-            processTradeEq(documentRequest);
+            processTradeEq(documentRequest, portfolioId, userId);
         }
     }
 
-    private void processEquityPortfolio(DocumentRequest documentRequest) {
+    private void processEquityPortfolio(DocumentRequest documentRequest, String portfolioId, String userId) {
         List<EquityModel> assets = portfolioService.processEquityFile(documentRequest);
-        messagingEventService.sendStockPortfolioMessage(assets, documentRequest.getRequestId(), documentRequest.getBrokerType());
+        messagingEventService.sendStockPortfolioMessage(assets, documentRequest.getRequestId(), documentRequest.getBrokerType(), portfolioId, userId);
     }
 
-    private void processNseIndices(DocumentRequest documentRequest) {
+    private void processNseIndices(DocumentRequest documentRequest, String portfolioId) {
         List<SecurityModel> assets = nseService.processNseSecurity(documentRequest);
         //messagingEventService.sendNseIndicesMessage(assets, documentRequest.getRequestId(), documentRequest.getBrokerType());
     }
 
-    private void processMutualFundsPortfolio(DocumentRequest documentRequest) {
+    private void processMutualFundsPortfolio(DocumentRequest documentRequest, String portfolioId, String userId) {
         List<MutualFundModel> mutualFunds = portfolioService.processMutualFundFile(documentRequest);
-        messagingEventService.sendMutualFundPortfolioMessage(mutualFunds, documentRequest.getRequestId(), documentRequest.getBrokerType());
+        messagingEventService.sendMutualFundPortfolioMessage(mutualFunds, documentRequest.getRequestId(), documentRequest.getBrokerType(), portfolioId, userId);
     }
 
-    private void processTradeFno(DocumentRequest documentRequest) {
+    private void processTradeFno(DocumentRequest documentRequest, String portfolioId, String userId) {
         List<TradeModel> trades = tradeService.processTradeFile(documentRequest);
-        messagingEventService.sendTradeFnoMessage(trades, documentRequest.getRequestId(), documentRequest.getBrokerType());
+        messagingEventService.sendTradeFnoMessage(trades, documentRequest.getRequestId(), documentRequest.getBrokerType(), portfolioId, userId);
     }
 
-    private void processTradeEq(DocumentRequest documentRequest) {
+    private void processTradeEq(DocumentRequest documentRequest, String portfolioId, String userId) {
         List<TradeModel> trades = tradeService.processTradeFile(documentRequest);
-        messagingEventService.sendTradeEqMessage(trades, documentRequest.getRequestId(), documentRequest.getBrokerType());
+        messagingEventService.sendTradeEqMessage(trades, documentRequest.getRequestId(), documentRequest.getBrokerType(), portfolioId, userId);
     }
 
     @Override

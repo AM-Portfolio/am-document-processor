@@ -24,6 +24,7 @@ public class PortfolioUpdateEvent {
     private UUID id;
     private BrokerType brokerType;
     private String userId;
+    private String portfolioId;
     private List<EquityModel> equities;
     private List<MutualFundModel> mutualFunds;
     private LocalDateTime timestamp;

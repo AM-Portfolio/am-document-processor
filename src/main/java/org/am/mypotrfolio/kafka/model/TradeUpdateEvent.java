@@ -24,6 +24,7 @@ public class TradeUpdateEvent {
     private UUID id;
     private String userId;
     private BrokerType brokerType;
+    private String portfolioId;
     private LocalDateTime timestamp;
     private List<TradeModel> trades;
 }
