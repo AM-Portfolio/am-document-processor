@@ -16,10 +16,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PortfolioRequest {
+public class DocumentRequest {
 
     private UUID requestId;
     private BrokerType brokerType;
     private DocumentType documentType;
     private MultipartFile file;
+    private String portfolioId;
+    private String userId;
 }

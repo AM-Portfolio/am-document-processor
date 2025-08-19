@@ -1,6 +1,9 @@
 package org.am.mypotrfolio.processor;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.am.mypotrfolio.domain.common.DocumentRequest;
+import org.am.mypotrfolio.domain.common.DocumentType;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.am.common.amcommondata.model.enums.BrokerType;
@@ -11,12 +14,17 @@ import java.util.*;
 public abstract class AbstractFileProcessor implements FileProcessor {
 
     @Override
-    public List<Map<String, String>> processFile(MultipartFile file, BrokerType brokerType) {
+    public List<Map<String, String>> processFile(MultipartFile file, DocumentRequest documentRequest) {
+        BrokerType brokerType = documentRequest.getBrokerType();
         log.info("Processing {} file for broker: {}", getFileType(), brokerType);
         try {
+            if (brokerType == null) {
+                log.debug("Using NSE Security parser");
+                return parseNseSecurityFile(file);
+            }
             if (brokerType.isZerodha()) {
                 log.debug("Using Zerodha parser");
-                return parseZerodhaFile(file);
+                return (documentRequest.getDocumentType() == DocumentType.TRADE_EQ || documentRequest.getDocumentType() == DocumentType.TRADE_FNO) ? parseZerodhaTradeFile(file) : parseZerodhaFile(file);
             } else if (brokerType.isMStock()) {
                 log.debug("Using MStock parser");
                 return parseMStockFile(file);
@@ -36,9 +44,11 @@ public abstract class AbstractFileProcessor implements FileProcessor {
     }
 
     protected abstract List<Map<String, String>> parseZerodhaFile(MultipartFile file) throws Exception;
+    protected abstract List<Map<String, String>> parseZerodhaTradeFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseMStockFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseDhanFile(MultipartFile file) throws Exception;
     protected abstract List<Map<String, String>> parseGrowFile(MultipartFile file) throws Exception;
+    protected abstract List<Map<String, String>> parseNseSecurityFile(MultipartFile file) throws Exception;
 
     protected Map<String, String> createRowData(String[] headers, String[] values) {
         Map<String, String> row = new LinkedHashMap<>();

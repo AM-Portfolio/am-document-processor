@@ -45,6 +45,15 @@ public class CsvFileProcessor extends AbstractFileProcessor {
         return parseCsvFile(file, 20);
     }
 
+    @Override
+    protected List<Map<String, String>> parseNseSecurityFile(MultipartFile file) throws Exception {
+        return parseCsvFile(file, 0);
+    }
+    @Override
+    protected List<Map<String, String>> parseZerodhaTradeFile(MultipartFile file) throws Exception {
+        return parseCsvFile(file, 15);
+    }
+
     private List<Map<String, String>> parseCsvFile(MultipartFile file, int skipLines) throws Exception {
         List<Map<String, String>> data = new ArrayList<>();
         try (CSVReader reader = new CSVReaderBuilder(

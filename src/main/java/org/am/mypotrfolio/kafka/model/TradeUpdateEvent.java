@@ -4,28 +4,27 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.am.common.amcommondata.model.asset.equity.EquityModel;
-import com.am.common.amcommondata.model.asset.mutualfund.MutualFundModel;
+import org.am.mypotrfolio.model.trade.TradeModel;
+
 import com.am.common.amcommondata.model.enums.BrokerType;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Event model for trade updates to be sent via Kafka
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(Include.NON_NULL)
-public class PortfolioUpdateEvent {
+public class TradeUpdateEvent {
     private UUID id;
-    private BrokerType brokerType;
     private String userId;
+    private BrokerType brokerType;
     private String portfolioId;
-    private List<EquityModel> equities;
-    private List<MutualFundModel> mutualFunds;
     private LocalDateTime timestamp;
+    private List<TradeModel> trades;
 }

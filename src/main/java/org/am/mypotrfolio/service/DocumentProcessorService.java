@@ -1,10 +1,10 @@
 package org.am.mypotrfolio.service;
 
 import org.am.mypotrfolio.domain.common.DocumentType;
-import org.am.mypotrfolio.domain.common.PortfolioRequest;
+import org.am.mypotrfolio.domain.common.DocumentRequest;
 import org.am.mypotrfolio.model.DocumentProcessResponse;
 import org.am.mypotrfolio.model.ProcessingStatus;
-import org.am.mypotrfolio.service.processor.BrokerDocumentProcessor;
+import org.am.mypotrfolio.service.processor.DocumentProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,48 +23,48 @@ public class DocumentProcessorService {
     private static final Logger log = LoggerFactory.getLogger(DocumentProcessorService.class);
 
     private final Map<UUID, ProcessingStatus> processStatusMap = new ConcurrentHashMap<>();
-    private final BrokerDocumentProcessor brokerDocumentProcessor;
+    private final DocumentProcessor documentProcessor;
 
-    public DocumentProcessResponse processDocument(MultipartFile file, DocumentType documentType) {
-        var portfolioRequest = getPortfolioRequest(file, documentType);
-        log.info("[ProcessId: {}] Starting document processing for type: {}", portfolioRequest.getRequestId(), documentType);
-        processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.QUEUED);
+    public DocumentProcessResponse processDocument(MultipartFile file, DocumentType documentType, String portfolioId, String userId) {
+        var documentRequest = getDocumentRequest(file, documentType, portfolioId, userId);
+        log.info("[ProcessId: {}] Starting document processing for type: {}", documentRequest.getRequestId(), documentType);
+        processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.QUEUED);
         
         try {
                 // Extract broker type from file name or content
-                log.debug("[ProcessId: {}] Detecting broker type from file", portfolioRequest.getRequestId());
-                log.info("[ProcessId: {}] Detected broker type: {}", portfolioRequest.getRequestId(), portfolioRequest.getBrokerType());
+                log.debug("[ProcessId: {}] Detecting broker type from file", documentRequest.getRequestId());
+                log.info("[ProcessId: {}] Detected broker type: {}", documentRequest.getRequestId(), documentRequest.getBrokerType());
                 
-                processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.PROCESSING);
-                log.info("[ProcessId: {}] Processing document with {} processor", portfolioRequest.getRequestId(), portfolioRequest.getBrokerType());
-                DocumentProcessResponse response = brokerDocumentProcessor.processDocument(portfolioRequest);
-                response.setProcessId(portfolioRequest.getRequestId());
+                processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.PROCESSING);
+                log.info("[ProcessId: {}] Processing document with {} processor", documentRequest.getRequestId(), documentRequest.getBrokerType());
+                DocumentProcessResponse response = documentProcessor.processDocument(documentRequest, portfolioId, userId);
+                response.setProcessId(documentRequest.getRequestId());
                 response.setStatus(ProcessingStatus.COMPLETED);
-                processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.COMPLETED);
+                processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.COMPLETED);
                 
-                log.info("[ProcessId: {}] Successfully completed document processing", portfolioRequest.getRequestId());
+                log.info("[ProcessId: {}] Successfully completed document processing", documentRequest.getRequestId());
                 return response;
         
         } catch (Exception e) {
-            log.error("[ProcessId: {}] Failed to process document: {}", portfolioRequest.getRequestId(), e.getMessage(), e);
-            processStatusMap.put(portfolioRequest.getRequestId(), ProcessingStatus.FAILED);
+            log.error("[ProcessId: {}] Failed to process document: {}", documentRequest.getRequestId(), e.getMessage(), e);
+            processStatusMap.put(documentRequest.getRequestId(), ProcessingStatus.FAILED);
             throw new RuntimeException("Failed to process document: " + e.getMessage(), e);
         }
     }
 
-    private PortfolioRequest getPortfolioRequest(MultipartFile file, DocumentType documentType) {
+    private DocumentRequest getDocumentRequest(MultipartFile file, DocumentType documentType, String portfolioId, String userId) {
         UUID processId = UUID.randomUUID();
         BrokerType brokerType = detectBrokerType(file);
-        return PortfolioRequest.builder().file(file).documentType(documentType).requestId(processId).brokerType(brokerType).build();
+        return DocumentRequest.builder().file(file).documentType(documentType).requestId(processId).brokerType(brokerType).portfolioId(portfolioId).userId(userId).build();
     }
 
-    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files,  DocumentType documentType) {
+    public List<DocumentProcessResponse> processBatchDocuments(List<MultipartFile> files,  DocumentType documentType, String portfolioId, String userId) {
         UUID batchId = UUID.randomUUID();
         log.info("[BatchId: {}] Starting batch processing of {} documents", batchId, files.size());
         List<DocumentProcessResponse> responses = new ArrayList<>();
         
         for (MultipartFile file : files) {
-            responses.add(processDocument(file, documentType));
+            responses.add(processDocument(file, documentType, portfolioId, userId));
         }
         
         log.info("[BatchId: {}] Completed batch processing", batchId);
@@ -99,7 +99,8 @@ public class DocumentProcessorService {
         else if (filename.contains("GROWW")) {
             return BrokerType.GROW;
         }
-        throw new IllegalArgumentException("Unable to detect broker type from file: " + filename);
+        return null;
+        //throw new IllegalArgumentException("Unable to detect broker type from file: " + filename);
     }
 
     private DocumentProcessResponse processOtherDocumentTypes(UUID processId, MultipartFile file, String documentType) {

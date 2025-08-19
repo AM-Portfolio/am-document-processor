@@ -3,8 +3,8 @@ package org.am.mypotrfolio.processor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
+import java.util.stream.Collectors;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,6 +50,16 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
         return parseExcelFile(file, 20, 20, 0);
     }
 
+    @Override
+    protected List<Map<String, String>> parseNseSecurityFile(MultipartFile file) throws Exception {
+        return parseExcelFile(file, 0, 0, 0);
+    }
+
+    @Override
+    protected List<Map<String, String>> parseZerodhaTradeFile(MultipartFile file) throws Exception {
+        return parseExcelFile(file, 14, 14, 0);
+    }
+
     private List<Map<String, String>> parseExcelFile(MultipartFile file, int headerRow, int skipRows, int skipColumns) throws Exception {
         List<Map<String, String>> jsonList = new ArrayList<>();
 
@@ -71,23 +81,42 @@ public class ExcelFileProcessor extends AbstractFileProcessor {
                     for (Cell cell : row) {
                         cell.setCellType(CellType.STRING);
                         String header = cell.getStringCellValue().trim();
+                        // Skip empty header cells
+                        if (header.isEmpty()) {
+                            continue;
+                        }
                         // Remove BOM if present
                         if (headers.isEmpty() && header.startsWith("\uFEFF")) {
                             header = header.substring(1);
                         }
                         headers.add(header);
                     }
+                    // Adjust headers list if we need to skip columns
+                    if (skipColumns > 0) {
+                        headers = headers.subList(skipColumns, headers.size());
+                    }
+                    // Filter out any remaining empty headers after processing
+                    headers = headers.stream()
+                            .filter(h -> h != null && !h.trim().isEmpty())
+                            .collect(Collectors.toList());
                     continue;
                 }
 
                 if (headers.isEmpty()) continue;
 
-                String[] values = new String[headers.size()-skipColumns];
+                String[] values = new String[headers.size()];
+                int valueIndex = 0;
+                int cellsToSkip = skipColumns; // Skip first cell + skipColumns
+                int cellIndex = 0;
+                
                 for (Cell cell : row) {
                     cell.setCellType(CellType.STRING);
-                    if (cell.getColumnIndex() < headers.size()) {
-                        values[cell.getColumnIndex()-skipColumns] = cell.getStringCellValue();
+                    // Skip first cell and skipColumns
+                    if (cellIndex >= cellsToSkip && valueIndex < values.length) {
+                        values[valueIndex] = cell.getStringCellValue();
+                        valueIndex++;
                     }
+                    cellIndex++;
                 }
 
                 Map<String, String> rowData = createRowData(headers.toArray(new String[0]), values);
