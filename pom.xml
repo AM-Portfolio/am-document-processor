@@ -57,6 +57,17 @@
 		<springdoc.openapi.version>2.3.0</springdoc.openapi.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/Am-Invest/am-common-libs</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<!-- Spring Boot Core Dependencies -->
 		<dependency>
