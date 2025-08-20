@@ -32,8 +32,8 @@
 		<spring.boot.version>3.4.1</spring.boot.version>
 		
 		<!-- AM Common -->
-		<am.common.data.mongo.version>1.2.4-SNAPSHOT</am.common.data.mongo.version>
-		<am.common.data.model.version>1.2.4-SNAPSHOT</am.common.data.model.version>
+		<am.common.data.mongo.version>1.2.7-SNAPSHOT</am.common.data.mongo.version>
+		<am.common.data.model.version>1.2.7-SNAPSHOT</am.common.data.model.version>
 		
 		<!-- Database -->
 		<mssql.jdbc.version>12.8.1.jre11</mssql.jdbc.version>
