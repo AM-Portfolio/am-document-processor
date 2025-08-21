@@ -24,8 +24,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
           server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-username: GITHUB_PACKAGES_USERNAME
+          server-password: GITHUB_PACKAGES_TOKEN
+          settings-path: ${{ github.workspace }}
 
       # Copy settings.xml from repo
       - name: Setup Maven settings.xml
@@ -41,8 +42,8 @@ jobs:
       - name: Build and publish with Maven
         run: mvn -B deploy
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_PACKAGES_USERNAME: ${{ github.actor }}
+          GITHUB_PACKAGES_TOKEN: ${{ github.token }}
           
       # Save artifact information
       - name: Save artifact info
