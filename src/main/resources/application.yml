@@ -11,7 +11,7 @@ spring:
     include:
       - lot-sizes
   datasource:
-     url: jdbc:postgresql://postgresql.dev.svc.cluster.local:5432
+     url: jdbc:postgresql://postgresql.dev.svc.cluster.local:5432/portfolio
      username: postgres
      password: password
      driver-class-name: org.postgresql.Driver
@@ -24,7 +24,11 @@ spring:
       hibernate:
         format_sql: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka.dev.svc.cluster.local:9092
+    properties:
+      security.protocol: SASL_PLAINTEXT
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
     consumer:
       group-id: document-processor
       auto-offset-reset: earliest
@@ -38,7 +42,7 @@ app:
     trade-topic: am-trade
   persistence:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/nse_security?authSource=admin
+      uri: mongodb://admin:password@mongodb.dev.svc.cluster.local:27017/nse_security?authSource=admin
       database: nse_security
 
 logging:
