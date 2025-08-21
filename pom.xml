@@ -58,15 +58,18 @@
 	</properties>
 
 	<repositories>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/Am-Invest/am-common-libs</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+        <repository>
+            <id>github-investment</id>
+            <name>GitHub AM Common Investment Service Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-common-investment-service</url>
+        </repository>
+    
+        <repository>
+            <id>github-am-common</id>
+            <name>GitHub AM Common Data Model Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-common-data-parent</url>
+        </repository>
+    </repositories>
 
 	<dependencies>
 		<!-- Spring Boot Core Dependencies -->
