@@ -3,7 +3,13 @@ FROM maven:3.8.4-openjdk-17-slim AS builder
 
 WORKDIR /build
 
-# Copy Maven settings first
+# Set up GitHub credentials first
+ARG GITHUB_PACKAGES_USERNAME
+ARG GITHUB_PACKAGES_TOKEN
+ENV GITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME}
+ENV GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
+
+# Copy Maven settings
 COPY settings.xml /root/.m2/settings.xml
 
 # Copy pom.xml and download dependencies to leverage Docker cache
@@ -12,12 +18,6 @@ RUN mvn dependency:go-offline -B
 
 # Copy the source code
 COPY src ./src
-
-# Build the application with GitHub credentials
-ARG GITHUB_PACKAGES_USERNAME
-ARG GITHUB_PACKAGES_TOKEN
-ENV GITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME}
-ENV GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
 
 # Build the application
 RUN mvn clean package -DskipTests
