@@ -43,7 +43,7 @@ spec:
       - name: ghcr-secret
       containers:
         - name: {{ .Chart.Name }}
-          image: "ghcr.io/am-portfolio/am-document-processor/am-document-processor-service:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "ghcr.io/am-portfolio/am-document-processor/am-document-processor:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: Always
           # Load environment variables from ConfigMap
           envFrom:
