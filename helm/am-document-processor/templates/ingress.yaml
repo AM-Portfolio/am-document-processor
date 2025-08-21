@@ -7,12 +7,18 @@ metadata:
   name: {{ $fullName }}
   labels:
         {{- include "am-document-processor.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    {{- if .Values.ingress.annotations }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: {{ .Values.ingress.host | default "document-processor.am.local" | quote }}
+      http:
         paths:
-          - path: /
+          - path: /api/documents
             pathType: Prefix
             backend:
               service:
