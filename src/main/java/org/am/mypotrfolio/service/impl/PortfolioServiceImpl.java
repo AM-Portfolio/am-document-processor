@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-@Service
+@Service("documentProcessorPortfolioService")
 @Slf4j
 @RequiredArgsConstructor
 public class PortfolioServiceImpl implements PortfolioService {

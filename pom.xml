@@ -32,8 +32,9 @@
 		<spring.boot.version>3.4.1</spring.boot.version>
 		
 		<!-- AM Common -->
-		<am.common.data.mongo.version>1.2.4-SNAPSHOT</am.common.data.mongo.version>
-		<am.common.data.model.version>1.2.4-SNAPSHOT</am.common.data.model.version>
+		<am.common.data.mongo.version>1.2.8-SNAPSHOT</am.common.data.mongo.version>
+		<am.common.data.model.version>1.2.8-SNAPSHOT</am.common.data.model.version>
+		<am.common.data.service.version>1.2.8-SNAPSHOT</am.common.data.service.version>
 		
 		<!-- Database -->
 		<mssql.jdbc.version>12.8.1.jre11</mssql.jdbc.version>
@@ -56,6 +57,20 @@
 		<!-- Documentation -->
 		<springdoc.openapi.version>2.3.0</springdoc.openapi.version>
 	</properties>
+
+	<repositories>
+        <repository>
+            <id>github-investment</id>
+            <name>GitHub AM Common Investment Service Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-common-investment-service</url>
+        </repository>
+    
+        <repository>
+            <id>github-am-common</id>
+            <name>GitHub AM Common Data Model Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-common-data-parent</url>
+        </repository>
+    </repositories>
 
 	<dependencies>
 		<!-- Spring Boot Core Dependencies -->
@@ -92,6 +107,12 @@
 			<groupId>com.am.common</groupId>
 			<artifactId>am-common-data-model</artifactId>
 			<version>${am.common.data.model.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.am.common</groupId>
+			<artifactId>am-common-data-service</artifactId>
+			<version>${am.common.data.service.version}</version>
 		</dependency>
 
 		<!-- Database Dependencies -->

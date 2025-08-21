@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class DocumentProcessorImpl implements DocumentProcessor {
+    @org.springframework.beans.factory.annotation.Qualifier("documentProcessorPortfolioService")
     private final PortfolioService portfolioService;
     private final NseService nseService;
     private final MessagingEventService messagingEventService;
