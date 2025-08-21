@@ -65,5 +65,4 @@ jobs:
     uses: ./.github/workflows/unified-deployment.yml
     with:
       image_tag: v${{ github.run_id }}
-      artifact_id: "org.am:am-processor:v${{ github.run_id }}"
     secrets: inherit
