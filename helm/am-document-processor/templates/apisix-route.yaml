@@ -9,33 +9,76 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: apisix
 spec:
+  ingressClassName: apisix
   http:
-    - name: {{ $fullName }}-root
-      match:
-        hosts:
-          - {{ .Values.ingress.host | default "test.local" | quote }}
-        paths:
-          - /
-      backends:
-        - serviceName: {{ include "am-document-processor.fullname" . }}-service
-          servicePort: {{ $svcPort }}
-      plugins:
-        - name: response-rewrite
-          config:
-            headers:
-              set:
-                X-Debug-Route: "root-path"
     - name: {{ $fullName }}-swagger-ui
       match:
         hosts:
           - {{ .Values.ingress.host | default "test.local" | quote }}
         paths:
           - /swagger-ui/*
+          - /swagger-ui.html
       backends:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        - name: proxy-rewrite
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "swagger-ui-path"
+    
+    - name: {{ $fullName }}-api-docs
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /v3/api-docs/*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "api-docs-path"
+    
+    - name: {{ $fullName }}-api
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /api/*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "api-path"
+    
+    - name: {{ $fullName }}-catchall
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "catchall-path"
           config:
             regex_uri: ["^/swagger-ui/(.*)", "/swagger-ui/$1"]
         - name: response-rewrite

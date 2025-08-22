@@ -9,6 +9,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: apisix
 spec:
+  ingressClassName: apisix
   http:
     - name: {{ $fullName }}-catchall
       match:

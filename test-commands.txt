@@ -1,0 +1,18 @@
+# Test commands for accessing Swagger UI through APISIX
+
+# Try with Host header
+curl -H "Host: document-processor.am.local" http://20.59.122.54:30747/swagger-ui/index.html
+
+# Try alternative Swagger UI paths
+curl -H "Host: document-processor.am.local" http://20.59.122.54:30747/swagger-ui.html
+curl -H "Host: document-processor.am.local" http://20.59.122.54:30747/swagger-ui/
+curl -H "Host: document-processor.am.local" http://20.59.122.54:30747/v3/api-docs
+
+# Try accessing API endpoints directly
+curl -H "Host: document-processor.am.local" http://20.59.122.54:30747/api/v1/documents/types
+
+# Try with direct browser access (add to hosts file first)
+# Add to C:\Windows\System32\drivers\etc\hosts:
+# 20.59.122.54 document-processor.am.local
+# Then access in browser:
+# http://document-processor.am.local:30747/swagger-ui/index.html

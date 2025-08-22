@@ -1,0 +1,29 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: am-document-processor-simple-route-temp
+  namespace: dev
+  annotations:
+    kubernetes.io/ingress.class: apisix
+spec:
+  http:
+    - name: am-document-processor-simple-route-catchall
+      match:
+        hosts:
+          - document-processor.am.local
+        paths:
+          - /*
+      backends:
+        - serviceName: am-document-processor-service
+          servicePort: 8080
+      plugins:
+        - name: proxy-rewrite
+          enable: true
+          config:
+            regex_uri: ["^/(.*)", "/$1"]
+        - name: response-rewrite
+          enable: true
+          config:
+            headers:
+              set:
+                X-Debug-Route: "catchall-path"
