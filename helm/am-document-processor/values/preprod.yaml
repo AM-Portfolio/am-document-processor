@@ -21,6 +21,7 @@ ingress:
   ipAddress: 20.59.122.54
   port: 30747
   host: "document-processor.am.local"
+  useStandardIngress: false # Set to true if you want to use standard Kubernetes Ingress
   annotations:
     kubernetes.io/ingress.class: apisix
 
