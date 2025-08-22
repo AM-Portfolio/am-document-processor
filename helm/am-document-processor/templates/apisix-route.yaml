@@ -8,12 +8,39 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   http:
-    - name: {{ $fullName }}
+    - name: {{ $fullName }}-root
       match:
         hosts:
           - {{ .Values.ingress.host | default "test.local" | quote }}
         paths:
-          - /*
+          - /
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+    - name: {{ $fullName }}-swagger
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /swagger-ui/*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+    - name: {{ $fullName }}-api
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /api/*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+    - name: {{ $fullName }}-actuator
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /actuator/*
       backends:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
