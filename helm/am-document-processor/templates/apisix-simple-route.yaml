@@ -6,6 +6,8 @@ kind: ApisixRoute
 metadata:
   name: {{ $fullName }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: apisix
 spec:
   http:
     - name: {{ $fullName }}-catchall
@@ -18,12 +20,10 @@ spec:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        - name: proxy-rewrite
-          config:
-            regex_uri: ["^/(.*)", "/$1"]
-        - name: response-rewrite
-          config:
-            headers:
-              set:
-                X-Debug-Route: "catchall-path"
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "catchall-path"
 {{- end }}

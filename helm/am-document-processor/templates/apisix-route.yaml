@@ -6,6 +6,8 @@ kind: ApisixRoute
 metadata:
   name: {{ $fullName }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: apisix
 spec:
   http:
     - name: {{ $fullName }}-root
@@ -18,11 +20,10 @@ spec:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        - name: response-rewrite
-          config:
-            headers:
-              set:
-                X-Debug-Route: "root-path"
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "root-path"
     - name: {{ $fullName }}-swagger-ui
       match:
         hosts:
@@ -33,14 +34,12 @@ spec:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        - name: proxy-rewrite
-          config:
-            regex_uri: ["^/swagger-ui/(.*)", "/swagger-ui/$1"]
-        - name: response-rewrite
-          config:
-            headers:
-              set:
-                X-Debug-Route: "swagger-ui-path"
+        proxy-rewrite:
+          regex_uri: ["^/swagger-ui/(.*)", "/swagger-ui/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "swagger-ui-path"
     - name: {{ $fullName }}-api
       match:
         hosts:
