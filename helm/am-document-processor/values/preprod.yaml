@@ -18,10 +18,11 @@ service:
 # Ingress Configuration
 ingress:
   enabled: true
-  ipAddress: 20.59.109.241
+  ipAddress: 20.59.122.54
+  port: 30747
   host: "document-processor.am.local"
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: apisix
 
 # Resource Configuration
 resources:
@@ -57,4 +58,5 @@ monitoring:
   prometheus:
     scrape: true
     port: "8080"
+    path: "/actuator/prometheus"
     path: "/actuator/prometheus"
