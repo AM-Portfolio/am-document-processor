@@ -18,10 +18,11 @@ spec:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        response-rewrite:
-          headers:
-            set:
-              X-Debug-Route: "root-path"
+        - name: response-rewrite
+          config:
+            headers:
+              set:
+                X-Debug-Route: "root-path"
     - name: {{ $fullName }}-swagger-ui
       match:
         hosts:
@@ -32,12 +33,14 @@ spec:
         - serviceName: {{ include "am-document-processor.fullname" . }}-service
           servicePort: {{ $svcPort }}
       plugins:
-        proxy-rewrite:
-          regex_uri: ["^/swagger-ui/(.*)", "/swagger-ui/$1"]
-        response-rewrite:
-          headers:
-            set:
-              X-Debug-Route: "swagger-ui-path"
+        - name: proxy-rewrite
+          config:
+            regex_uri: ["^/swagger-ui/(.*)", "/swagger-ui/$1"]
+        - name: response-rewrite
+          config:
+            headers:
+              set:
+                X-Debug-Route: "swagger-ui-path"
     - name: {{ $fullName }}-api
       match:
         hosts:
