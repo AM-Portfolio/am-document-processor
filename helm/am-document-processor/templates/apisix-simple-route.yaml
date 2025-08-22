@@ -1,0 +1,27 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := printf "%s-simple-route" (include "am-document-processor.fullname" .) -}}
+{{- $svcPort := .Values.service.port -}}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  http:
+    - name: {{ $fullName }}-catchall
+      match:
+        hosts:
+          - {{ .Values.ingress.host | default "test.local" | quote }}
+        paths:
+          - /*
+      backends:
+        - serviceName: {{ include "am-document-processor.fullname" . }}-service
+          servicePort: {{ $svcPort }}
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/(.*)", "/$1"]
+        response-rewrite:
+          headers:
+            set:
+              X-Debug-Route: "catchall-path"
+{{- end }}
