@@ -59,4 +59,3 @@ monitoring:
     scrape: true
     port: "8080"
     path: "/actuator/prometheus"
-    path: "/actuator/prometheus"
