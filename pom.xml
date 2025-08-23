@@ -32,9 +32,9 @@
 		<spring.boot.version>3.4.1</spring.boot.version>
 		
 		<!-- AM Common -->
-		<am.common.data.mongo.version>1.2.8-SNAPSHOT</am.common.data.mongo.version>
-		<am.common.data.model.version>1.2.8-SNAPSHOT</am.common.data.model.version>
-		<am.common.data.service.version>1.2.8-SNAPSHOT</am.common.data.service.version>
+		<am.common.data.mongo.version>1.2.9-SNAPSHOT</am.common.data.mongo.version>
+		<am.common.data.model.version>1.2.9-SNAPSHOT</am.common.data.model.version>
+		<am.common.data.service.version>1.2.9-SNAPSHOT</am.common.data.service.version>
 		
 		<!-- Database -->
 		<mssql.jdbc.version>12.8.1.jre11</mssql.jdbc.version>
@@ -120,11 +120,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>${mssql.jdbc.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
