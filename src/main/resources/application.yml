@@ -40,8 +40,8 @@ spring:
       auto-offset-reset: earliest
   data:
     mongodb:
-      uri: ${MONGODB_URI}
-      database: ${MONGODB_DATABASE}
+      uri: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/portfolio?authSource=admin
+      database: portfolio
       auto-index-creation: true
 
 app:

@@ -36,8 +36,6 @@ spec:
           KAFKA_ZOOKEEPER_CONNECT="{{ .Data.data.zookeeperconnect }}"
           KAFKA_CONSUMER_GROUP_ID="{{ .Data.data.consumerGroupId }}"
           KAFKA_CONSUMER_AUTO_OFFSET_RESET="{{ .Data.data.autooffsetreset }}"
-          
-          
           {{- end -}}`}}
 
         vault.hashicorp.com/agent-inject-secret-mongodb: "kv/preprod/database/mongo"
