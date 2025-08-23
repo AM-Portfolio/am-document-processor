@@ -48,7 +48,7 @@ app:
     trade-topic: am-trade
   persistence:
     mongodb:
-      uri: mongodb://admin:password@mongodb.dev.svc.cluster.local:27017/nse_security?authSource=admin
+      uri: mongodb://ssd2658:ssd2658@localhost:27017/market_data?authSource=admin
       database: nse_security
 
 logging:
