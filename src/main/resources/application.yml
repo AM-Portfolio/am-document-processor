@@ -48,8 +48,8 @@ app:
     trade-topic: am-trade
   persistence:
     mongodb:
-      uri: mongodb://ssd2658:ssd2658@localhost:27017/market_data?authSource=admin
-      database: nse_security
+      uri: mongodb://ssd2658:ssd2658@localhost:27017/am-document?authSource=admin
+      database: am-document
 
 logging:
   level:
