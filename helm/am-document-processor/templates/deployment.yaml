@@ -43,10 +43,8 @@ spec:
         vault.hashicorp.com/agent-inject-secret-mongodb: "kv/preprod/database/mongo"
         vault.hashicorp.com/agent-inject-template-mongodb: |
           {{`{{- with secret "kv/preprod/database/mongo" -}}
-          MONGODB_URL="{{ .Data.data.url }}"
-          MONGODB_DATABASE="{{ .Data.data.marketdtadatabase }}"
-          MONGODB_USERNAME="{{ .Data.data.username }}"
-          MONGODB_PASSWORD="{{ .Data.data.password }}"
+          MONGODB_DATABASE="{{ .Data.data.portfoliodatabase }}"
+          MONGODB_URI= {{ .Data.data.uri }}/{{ .Data.data.portfoliodatabase }}?authSource={{ .Data.data.authsource }}
           {{- end -}}`}}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
