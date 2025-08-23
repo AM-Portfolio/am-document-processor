@@ -2,7 +2,7 @@
 KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092
 KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
 KAFKA_SASL_MECHANISM: PLAIN
-KAFKA_SASL_JAAS_CONFIG:
+KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkauser" password="kafkapassword";
 
 server:
   port: 8080
@@ -60,3 +60,34 @@ logging:
     org.hibernate.SQL: INFO
     '[org.hibernate.type.descriptor.sql.BasicBinder]': TRACE
     '[org.springframework.data.mongodb.core.MongoTemplate]': DEBUG
+
+
+
+# Management/Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      validate-group-membership: false
+      group:
+        readiness:
+          include: diskSpace,mongodb,redis,kafka
+        liveness:
+          include: diskSpace,mongodb,redis,kafka
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    mongo:
+      enabled: true
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
