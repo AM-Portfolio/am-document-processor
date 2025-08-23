@@ -29,8 +29,20 @@ spec:
         vault.hashicorp.com/agent-inject-secret-kafka: "kv/preprod/kafka"
         vault.hashicorp.com/agent-inject-template-kafka: |
           {{`{{- with secret "kv/preprod/kafka" -}}
-          export KAFKA_BOOTSTRAP_SERVERS="{{ .Data.data.bootstrapServers }}"
-          export KAFKA_CONSUMER_GROUP_ID="{{ .Data.data.consumerGroupId }}"
+          KAFKA_BOOTSTRAP_SERVERS="{{ .Data.data.kafkabootstrapserver }}"
+          KAFKA_SECURITY_PROTOCOL="{{ .Data.data.securityprotocol }}"
+          KAFKA_SASL_MECHANISM="{{ .Data.data.sslmechanism }}"
+          KAFKA_SASL_JAAS_CONFIG="{{ .Data.data.sasljaasconfig }}"
+          KAFKA_ZOOKEEPER_CONNECT="{{ .Data.data.zookeeperconnect }}"
+          KAFKA_CONSUMER_GROUP_ID="{{ .Data.data.consumerGroupId }}"
+          KAFKA_CONSUMER_AUTO_OFFSET_RESET="{{ .Data.data.autooffsetreset }}"
+          {{- end -}}`}}
+
+        vault.hashicorp.com/agent-inject-secret-mongodb: "kv/preprod/database/mongo"
+        vault.hashicorp.com/agent-inject-template-mongodb: |
+          {{`{{- with secret "kv/preprod/database/mongo" -}}
+          MONGODB_DATABASE="{{ .Data.data.portfoliodatabase }}"
+          MONGODB_URI= {{ .Data.data.uri }}/{{ .Data.data.portfoliodatabase }}?authSource={{ .Data.data.authsource }}
           {{- end -}}`}}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
