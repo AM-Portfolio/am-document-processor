@@ -32,12 +32,9 @@
 		<spring.boot.version>3.4.1</spring.boot.version>
 		
 		<!-- AM Common -->
-		<am.common.data.mongo.version>1.2.9-SNAPSHOT</am.common.data.mongo.version>
-		<am.common.data.model.version>1.2.9-SNAPSHOT</am.common.data.model.version>
-		<am.common.data.service.version>1.2.9-SNAPSHOT</am.common.data.service.version>
-		
-		<!-- Database -->
-		<mssql.jdbc.version>12.8.1.jre11</mssql.jdbc.version>
+		<am.common.data.mongo.version>1.2.10-SNAPSHOT</am.common.data.mongo.version>
+		<am.common.data.model.version>1.2.10-SNAPSHOT</am.common.data.model.version>
+		<am.common.data.service.version>1.2.10-SNAPSHOT</am.common.data.service.version>
 		
 		<!-- Utility Libraries -->
 		<jackson.databind.version>2.15.2</jackson.databind.version>
@@ -88,10 +85,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
@@ -119,16 +112,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
-		</dependency>
-		<!-- <dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>mssql-jdbc</artifactId>
-			<version>${mssql.jdbc.version}</version>
-		</dependency> -->
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Utility Dependencies -->

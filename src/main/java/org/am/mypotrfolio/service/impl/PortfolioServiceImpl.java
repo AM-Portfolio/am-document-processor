@@ -9,8 +9,6 @@ import java.util.Optional;
 import org.am.mypotrfolio.domain.common.MutualFundAsset;
 import org.am.mypotrfolio.domain.common.DocumentRequest;
 import org.am.mypotrfolio.domain.common.StockAsset;
-import org.am.mypotrfolio.nsesecurity.domain.NseSecurity;
-import org.am.mypotrfolio.nsesecurity.repo.NseSecurityRepository;
 import org.am.mypotrfolio.processor.FileProcessorFactory;
 import org.am.mypotrfolio.service.PortfolioService;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PortfolioServiceImpl implements PortfolioService {
     private final FileProcessorFactory fileProcessorFactory;
     private final SecurityService securityService;
-    private final NseSecurityRepository nseSecurityRepository;
     private final ObjectMapper objectMapper;
 
 
@@ -138,10 +135,10 @@ public class PortfolioServiceImpl implements PortfolioService {
                 .name(stock.getName());
 
         if(brokerType.isDhan() || brokerType.isMStock()){
-            Optional<NseSecurity> nseSecurity = nseSecurityRepository.findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
+            Optional<SecurityModel> nseSecurity = findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
             if (nseSecurity.isPresent()) {
-                NseSecurity security = nseSecurity.get();
-                stock.setIsin(security.getIsin());
+                SecurityModel security = nseSecurity.get();
+                stock.setIsin(security.getKey().getIsin());
             }
         }
 
@@ -159,5 +156,13 @@ public class PortfolioServiceImpl implements PortfolioService {
             }
         //}
         return assetBuilder.build();
+    }
+
+    Optional<SecurityModel> findBestMatchBySearchParam(String searchParam) {
+        if (searchParam == null || searchParam.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        List<SecurityModel> matches = securityService.findSecurityBySearchParam(searchParam);
+        return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
     }
 }

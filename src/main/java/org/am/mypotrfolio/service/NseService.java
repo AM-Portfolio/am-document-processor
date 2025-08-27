@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.am.mypotrfolio.domain.common.NseSecurity;
 import org.am.mypotrfolio.domain.common.DocumentRequest;
-import org.am.mypotrfolio.nsesecurity.repo.EquityDataRepository;
+
 import org.am.mypotrfolio.processor.FileProcessorFactory;
 import org.am.mypotrfolio.service.mapper.NseSecurityMapper;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NseService {
     private final FileProcessorFactory fileProcessorFactory;
     private final NseSecurityMapper securityMapper;
-    private final EquityDataRepository equityDataRepository;
+
     private final SecurityService securityService;
     private final ObjectMapper objectMapper;
 
@@ -68,14 +68,17 @@ public class NseService {
 
             // Try to find NSE security by name or other identifiers
             var securityModel = securityMapper.toSecurityModel(security);
-            equityDataRepository.findByKey(security.getIsin())
-                .ifPresentOrElse(
-                    equityData -> {
-                        securityModel.getMetadata().setMarketCapValue(equityData.getMarketCap());
-                        log.debug("[ProcessId: {}] Found market cap data for security: {}", processId, security.getSecurityId());
-                    },
-                    () -> log.debug("[ProcessId: {}] No market cap data found for security: {}", processId, security.getSecurityId())
-                );
+
+            //@TODO: Find api/doc to provide realtime market data for all securities
+
+            // equityDataRepository.findByKey(security.getIsin())
+            //     .ifPresentOrElse(
+            //         equityData -> {
+            //             securityModel.getMetadata().setMarketCapValue(equityData.getMarketCap());
+            //             log.debug("[ProcessId: {}] Found market cap data for security: {}", processId, security.getSecurityId());
+            //         },
+            //         () -> log.debug("[ProcessId: {}] No market cap data found for security: {}", processId, security.getSecurityId())
+            //     );
             
             securityModels.add(securityModel);
         }
