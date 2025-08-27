@@ -16,7 +16,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "am-document-processor.fullname" . }}-service
+                name: {{ include "am-document-processor.fullname" . }}
                 port:
-                  number: {{ $svcPort }}
+                  number: 8080
 {{- end }}
