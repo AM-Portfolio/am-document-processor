@@ -1,33 +1,47 @@
 version: '3.8'
 
+
 services:
+  am-document-processor-service:
+    container_name: am-document-processor-service
+    build:
+      context: .
+      dockerfile: Dockerfile
 
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    restart: always
-    ports:
-      - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    volumes:
-      - mongodb_data:/data/db
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # MongoDB Configuration
+      - MONGODB_URL=${MONGODB_URL}
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mongo-express
-    restart: always
+      # Kafka Configuration
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+    
+    entrypoint: ["/bin/sh", "-c"]
+    command: 
+      - |
+        echo "=== AM Document Processor Service Environment Variables ==="
+        echo "Database URL: $${MONGODB_URL}"
+        echo "Kafka Servers: $${KAFKA_BOOTSTRAP_SERVERS}"
+        echo "=== Starting AM Document Processor Service ==="
+        java -jar app.jar
     ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: password
-    depends_on:
-      - mongodb
+      - "8080:8080"
+    networks:
+      - market-data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: ${AM_DOCUMENT_PROCESSOR_MAX_RETRIES:15}
+    restart: unless-stopped
 
 volumes:
-  mongodb_data:
+  postgres_data:
+  influxdb_data:
+  grafana_data:
+
+networks:
+  market-data-network:
+    driver: bridge
