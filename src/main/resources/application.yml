@@ -18,20 +18,22 @@ spring:
   profiles:
     include:
       - lot-sizes
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG} 
-    consumer:
-      group-id: document-processor
-      auto-offset-reset: earliest
   data:
     mongodb:
       uri: ${MONGODB_URL}
       database: portfolio
       auto-index-creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+    consumer:
+      group-id: am-document-processor-group
+      auto-offset-reset: earliest
+    listener:
+      missing-topics-fatal: false
 
 app:
   kafka:
