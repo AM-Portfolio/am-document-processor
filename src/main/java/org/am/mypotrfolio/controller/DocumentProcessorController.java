@@ -44,8 +44,12 @@ public class DocumentProcessorController {
             @Parameter(description = "Portfolio document file to process", required = true)
             @RequestParam("file") MultipartFile file,
             @Parameter(description = "Type of document being processed", required = true)
-            @RequestParam("documentType") DocumentType documentType) {
-        return ResponseEntity.ok(documentProcessorService.processDocument(file, documentType));
+            @RequestParam("documentType") DocumentType documentType,
+            @Parameter(description = "Portfolio ID", required = false)
+            @RequestParam(value = "portfolioId") String portfolioId,
+            @Parameter(description = "User ID", required = false)
+            @RequestParam(value = "userId") String userId) {
+        return ResponseEntity.ok(documentProcessorService.processDocument(file, documentType, portfolioId, userId));
     }
 
     @Operation(
@@ -63,8 +67,12 @@ public class DocumentProcessorController {
             @Parameter(description = "List of portfolio document files to process", required = true)
             @RequestParam("files") List<MultipartFile> files,
             @Parameter(description = "Type of documents being processed", required = true)
-            @RequestParam("documentType") DocumentType documentType) {
-        return ResponseEntity.ok(documentProcessorService.processBatchDocuments(files, documentType));
+            @RequestParam("documentType") DocumentType documentType,
+            @Parameter(description = "Portfolio ID", required = false)
+            @RequestParam(value = "portfolioId") String portfolioId,
+            @Parameter(description = "User ID", required = false)
+            @RequestParam(value = "userId") String userId) {
+        return ResponseEntity.ok(documentProcessorService.processBatchDocuments(files, documentType, portfolioId, userId));
     }
 
     @Operation(
