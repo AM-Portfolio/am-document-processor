@@ -17,9 +17,9 @@ public class ApiAutoConfiguration {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                    .allowedOrigins("http://localhost:3000") // Frontend URL
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                registry.addMapping("/**") // Allow all endpoints
+                    .allowedOriginPatterns("http://localhost:*", "https://localhost:*") // Allow localhost with any port
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                     .allowedHeaders("*")
                     .allowCredentials(true)
                     .maxAge(3600); // 1 hour max age
