@@ -1,6 +1,3 @@
-version: '3.8'
-
-
 services:
   am-document-processor-service:
     container_name: am-document-processor-service
