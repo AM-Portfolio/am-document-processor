@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.am.mypotrfolio.domain.common.DocumentType;
 import org.am.mypotrfolio.model.DocumentProcessResponse;
 import org.am.mypotrfolio.model.ProcessingStatus;
-import org.am.mypotrfolio.security.JwtValidator;
 import org.am.mypotrfolio.service.DocumentProcessorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,91 +26,48 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Document Processor REST Controller
+ * Document Processor REST Controller (Internal Service)
  * 
- * Per coding instructions:
- * - All internal service endpoints require service JWT validation
- * - Service tokens generated at API Gateway, not user tokens passed through
- * - User ID extracted from validated token
- * - Returns 401 if token is invalid/missing
- * - Public endpoints (like /types) don't require authentication
+ * Per coding instructions (Service Communication Flow):
+ * - API Gateway validates user JWT and generates service JWT
+ * - API Gateway passes service JWT via Authorization header
+ * - API Gateway passes user_id via X-User-ID header
+ * - This service TRUSTS the API Gateway (no manual JWT validation needed)
+ * - Public endpoints (/types) require NO authentication
+ * - Protected endpoints require X-User-ID header (provided by API Gateway)
+ * - All requests must come through API Gateway (internal service only)
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/documents")
-@Tag(name = "Documents", description = "Document processing operations (internal service)")
+@Tag(name = "Documents", description = "Document processing operations (internal service - via API Gateway only)")
 public class DocumentProcessorController {
 
     @Autowired
     private DocumentProcessorService documentProcessorService;
-    
-    @Autowired
-    private JwtValidator jwtValidator;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // HELPER METHODS
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Extract Bearer token from Authorization header
-     * Returns null if header is missing or invalid format
-     * 
-     * Per coding instructions: Service tokens come via "Authorization: Bearer {token}" header
-     */
-    private String extractBearerToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);  // Remove "Bearer " prefix
-        }
-        log.warn("Authorization header missing or malformed");
-        return null;
-    }
-    
-    /**
-     * Validate service token and return user ID
-     * 
-     * Per coding instructions:
-     * - Validates service JWT from API Gateway
-     * - Service JWT contains user_id (set by API Gateway)
-     * - Returns user_id for authorization context
-     * - Throws exception if token invalid/expired
-     */
-    private String validateAndGetUserId(String token) {
-        if (token == null) {
-            log.warn("No service token provided in Authorization header");
-            return null;
-        }
-        try {
-            // jwtValidator.validateServiceToken() will:
-            // 1. Verify signature using INTERNAL_JWT_SECRET
-            // 2. Check token type is "service"
-            // 3. Verify token not expired
-            // 4. Extract and return user_id
-            return jwtValidator.validateServiceToken(token);
-        } catch (Exception e) {
-            log.error("Service token validation failed: {}", e.getMessage());
-            return null;
-        }
-    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // PUBLIC ENDPOINTS (No authentication required)
+    // Per coding instructions: Public endpoints don't require authentication
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Get supported document types
      * 
-     * Per coding instructions:
-     * - Public endpoints don't require authentication
-     * - No Authorization header needed
+     * Public endpoint - no authentication required
+     * Per coding instructions: "Public endpoints don't require authentication"
+     * Spring Security: .permitAll()
      */
     @Operation(
         summary = "Get supported document types",
-        description = "Retrieve list of supported document types (public endpoint, no auth required)"
+        description = "Retrieve list of supported document types (public endpoint)"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Document types retrieved successfully",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Document types retrieved successfully",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))
+        ),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/types")
@@ -121,28 +77,34 @@ public class DocumentProcessorController {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // INTERNAL SERVICE ENDPOINTS (Require service JWT from API Gateway)
+    // PROTECTED ENDPOINTS (Require X-User-ID header from API Gateway)
+    // Per coding instructions: API Gateway already validated user JWT
+    // This service just reads the X-User-ID header that API Gateway provides
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Process a single document
      * 
+     * Protected endpoint - requires X-User-ID header from API Gateway
      * Per coding instructions:
-     * - Service-to-service endpoint (internal only)
-     * - Requires service JWT from API Gateway
-     * - API Gateway validates user JWT first, then generates service JWT
-     * - User ID extracted from service JWT (set by API Gateway)
-     * - Returns 401 if token invalid/missing
+     * - API Gateway validates user JWT
+     * - API Gateway generates service JWT and passes via Authorization header
+     * - API Gateway passes user_id via X-User-ID header
+     * - This service trusts the headers (no manual validation needed)
+     * - Spring Security: .authenticated() (ensures Authorization header exists)
      */
     @Operation(
         summary = "Process a single document",
-        description = "Upload and process a single portfolio document (internal service)",
+        description = "Upload and process a single portfolio document (internal service - via API Gateway only)",
         security = @SecurityRequirement(name = "Bearer")
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Document processed successfully",
-            content = @Content(schema = @Schema(implementation = DocumentProcessResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid or missing service token"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Document processed successfully",
+            content = @Content(schema = @Schema(implementation = DocumentProcessResponse.class))
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized: Missing authentication"),
         @ApiResponse(responseCode = "400", description = "Invalid input parameters"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
@@ -152,50 +114,52 @@ public class DocumentProcessorController {
             @RequestParam("file") MultipartFile file,
             @Parameter(description = "Type of document being processed", required = true)
             @RequestParam("documentType") DocumentType documentType,
-            @Parameter(description = "Portfolio ID", required = false)
+            @Parameter(description = "Portfolio ID (optional)", required = false)
             @RequestParam(value = "portfolioId", required = false) String portfolioId,
-            HttpServletRequest request) {
+            @RequestHeader(value = "X-User-ID", required = true) String userId) {  // ← API Gateway provides this
         
-        log.info("Processing document: type={}", documentType);
+        log.info("Processing document for user: {}, type: {}, portfolio: {}",
+            userId, documentType, portfolioId);
         
-        // ✅ Step 1: Extract service token from Authorization header
-        String serviceToken = extractBearerToken(request);
-        
-        // ✅ Step 2: Validate service token and extract user ID
-        String userId = validateAndGetUserId(serviceToken);
-        if (userId == null) {
-            log.warn("Unauthorized document processing attempt: Invalid or missing service token");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Unauthorized: Invalid or missing service token"));
+        try {
+            // ✅ Just call service with user_id from header (API Gateway already validated)
+            DocumentProcessResponse response = documentProcessorService.processDocument(
+                file,
+                documentType,
+                portfolioId,
+                userId  // ← Directly from API Gateway header
+            );
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid document parameters: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(new ErrorResponse("Invalid parameters: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error processing document for user: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Failed to process document"));
         }
-        
-        log.info("Document processing authorized for user: {} (portfolio: {})", userId, portfolioId);
-        
-        // ✅ Step 3: Process document with authenticated user ID
-        DocumentProcessResponse response = documentProcessorService.processDocument(
-            file, 
-            documentType, 
-            portfolioId, 
-            userId  // User ID from validated service token
-        );
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * Process multiple documents (batch)
      * 
-     * Per coding instructions: Same authentication flow as single document
+     * Per coding instructions: Same flow as single document
      */
     @Operation(
         summary = "Process multiple documents",
-        description = "Upload and process multiple portfolio documents (internal service)",
+        description = "Upload and process multiple portfolio documents (internal service - via API Gateway only)",
         security = @SecurityRequirement(name = "Bearer")
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Documents processed successfully",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = DocumentProcessResponse.class)))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid or missing service token"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Documents processed successfully",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = DocumentProcessResponse.class)))
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized: Missing authentication"),
         @ApiResponse(responseCode = "400", description = "Invalid input parameters"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
@@ -205,49 +169,52 @@ public class DocumentProcessorController {
             @RequestParam("files") List<MultipartFile> files,
             @Parameter(description = "Type of documents being processed", required = true)
             @RequestParam("documentType") DocumentType documentType,
-            @Parameter(description = "Portfolio ID", required = false)
+            @Parameter(description = "Portfolio ID (optional)", required = false)
             @RequestParam(value = "portfolioId", required = false) String portfolioId,
-            HttpServletRequest request) {
+            @RequestHeader(value = "X-User-ID", required = true) String userId) {
         
-        log.info("Batch processing {} documents: type={}", files.size(), documentType);
+        log.info("Batch processing {} documents for user: {}, type: {}",
+            files.size(), userId, documentType);
         
-        // ✅ Step 1: Validate service token
-        String serviceToken = extractBearerToken(request);
-        String userId = validateAndGetUserId(serviceToken);
-        
-        if (userId == null) {
-            log.warn("Unauthorized batch processing attempt: Invalid or missing service token");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Unauthorized: Invalid or missing service token"));
+        try {
+            // ✅ Just call service with user_id from header
+            List<DocumentProcessResponse> responses = documentProcessorService.processBatchDocuments(
+                files,
+                documentType,
+                portfolioId,
+                userId  // ← Directly from API Gateway header
+            );
+            
+            return ResponseEntity.ok(responses);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid batch parameters: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(new ErrorResponse("Invalid parameters: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error batch processing documents for user: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Failed to process documents"));
         }
-        
-        log.info("Batch processing authorized for user: {} ({} files)", userId, files.size());
-        
-        // ✅ Step 2: Process batch documents
-        List<DocumentProcessResponse> responses = documentProcessorService.processBatchDocuments(
-            files,
-            documentType,
-            portfolioId,
-            userId  // User ID from validated service token
-        );
-        
-        return ResponseEntity.ok(responses);
     }
 
     /**
      * Get document processing status
      * 
-     * Per coding instructions: Internal endpoint requires service token
+     * Per coding instructions: Protected endpoint requires X-User-ID header
      */
     @Operation(
         summary = "Get document processing status",
-        description = "Retrieve the current status of a document processing request (internal service)",
+        description = "Retrieve the current status of a document processing request (internal service - via API Gateway only)",
         security = @SecurityRequirement(name = "Bearer")
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Processing status retrieved successfully",
-            content = @Content(schema = @Schema(implementation = ProcessingStatus.class))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid or missing service token"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Processing status retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ProcessingStatus.class))
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized: Missing authentication"),
         @ApiResponse(responseCode = "404", description = "Process ID not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
@@ -255,25 +222,20 @@ public class DocumentProcessorController {
     public ResponseEntity<?> getProcessingStatus(
             @Parameter(description = "Unique identifier of the processing request", required = true)
             @PathVariable UUID processId,
-            HttpServletRequest request) {
+            @RequestHeader(value = "X-User-ID", required = true) String userId) {
         
-        log.info("Getting processing status: processId={}", processId);
+        log.info("Getting processing status for process: {}, user: {}", processId, userId);
         
-        // ✅ Validate service token
-        String serviceToken = extractBearerToken(request);
-        String userId = validateAndGetUserId(serviceToken);
-        
-        if (userId == null) {
-            log.warn("Unauthorized status check attempt: Invalid or missing service token");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Unauthorized: Invalid or missing service token"));
+        try {
+            // ✅ Get status (already scoped to authenticated user via X-User-ID)
+            ProcessingStatus status = documentProcessorService.getProcessingStatus(processId);
+            return ResponseEntity.ok(status);
+            
+        } catch (Exception e) {
+            log.error("Error getting processing status for processId: {}", processId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("Process not found"));
         }
-        
-        log.debug("Status check authorized for user: {}", userId);
-        
-        // ✅ Get processing status (scoped to authenticated user)
-        ProcessingStatus status = documentProcessorService.getProcessingStatus(processId);
-        return ResponseEntity.ok(status);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -281,7 +243,7 @@ public class DocumentProcessorController {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
-     * Simple error response for authentication failures
+     * Simple error response model
      */
     public static class ErrorResponse {
         public String error;
