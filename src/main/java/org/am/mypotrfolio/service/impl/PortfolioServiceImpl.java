@@ -134,7 +134,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                 .investmentValue(investedValue)
                 .name(stock.getName());
 
-        if(brokerType.isDhan() || brokerType.isMStock()){
+        if(brokerType != null && (brokerType.isDhan() || brokerType.isMStock())){
             Optional<SecurityModel> nseSecurity = findBestMatchBySearchParam(brokerType.isDhan() ? stock.getName() : stock.getSymbol());
             if (nseSecurity.isPresent()) {
                 SecurityModel security = nseSecurity.get();
