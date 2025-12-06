@@ -3,8 +3,8 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Copy the pre-built JAR file (will be copied in GitHub Actions)
-COPY target/am-processor-*.jar app.jar
+# Copy the pre-built JAR file
+COPY target/am-document-processor-*.jar app.jar
 
 # Install curl for healthcheck
 RUN apt-get update && \
@@ -18,11 +18,11 @@ ENV SPRING_PROFILES_ACTIVE=docker
 ENV TZ=Asia/Kolkata
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 8070
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+# Health check (port 8070 is correct, not 8080)
+HEALTHCHECK --interval=15s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -f http://localhost:8070/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
