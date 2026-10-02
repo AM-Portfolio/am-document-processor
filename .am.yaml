@@ -1,0 +1,16 @@
+# Local amctl identity — Contabo nonprod preprod deploy
+name: am-document-processor
+release: am-document-processor
+image: ghcr.io/am-portfolio/am-document-processor
+runtime: java
+language: java
+dockerfile: Dockerfile
+context: .
+github:
+  repo: AM-Portfolio/am-document-processor
+  deploy_workflow: manual-deployment.yml
+  service: am-document-processor
+  ref: main
+deploy:
+  via: helm
+  rebuild: never
