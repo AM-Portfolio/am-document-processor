@@ -143,7 +143,10 @@ public class PortfolioServiceImpl implements PortfolioService {
         }
 
         //if (stock.getIsin() == null || stock.getIsin().isEmpty()) {
-            Optional<SecurityModel> nseSecurity = securityService.findByKey(stock.getIsin());
+            String lookupKey = (stock.getIsin() != null && !stock.getIsin().isBlank()) 
+                    ? stock.getIsin() 
+                    : stock.getSymbol();
+            Optional<SecurityModel> nseSecurity = securityService.findByKey(lookupKey);
             // Enhance asset with NSE security information if available
             if (nseSecurity.isPresent()) {
                 SecurityModel security = nseSecurity.get();
